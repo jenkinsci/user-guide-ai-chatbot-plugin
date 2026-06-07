@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import time
 from typing import List, Optional, Set
 from .models import ThreadPreview, Author, Comment, ThreadDetails, Section
-from .helpers import get_subreddit_page_url, export_threads_to_json, extract_integer, parse_reddit_datetime, print_thread_details
-from ..utils import retry_until_success, sleep
+from .reddit_threads_utils import get_subreddit_page_url, export_threads_to_json, extract_integer, parse_reddit_datetime, print_thread_details
+from ..collection_utils import retry_until_success, sleep
 import os
 
 

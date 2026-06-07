@@ -1,9 +1,9 @@
 import os
 from bs4 import BeautifulSoup
-from .helpers import (
+from .formatting_utils import (
     extract_code_blocks,
 )
-from .helpers import (
+from .formatting_utils import (
     build_document,
 )
 from ..tools.common import read_json_file, write_json_file

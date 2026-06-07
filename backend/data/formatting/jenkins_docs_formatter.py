@@ -1,9 +1,9 @@
 import os
 from bs4 import BeautifulSoup
-from .helpers import (
+from .formatting_utils import (
     build_document,
 )
-from .helpers import (
+from .formatting_utils import (
     extract_code_blocks,
     extract_title,
 )

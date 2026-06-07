@@ -1,7 +1,6 @@
 from langchain_core.documents import Document
 from bs4.element import NavigableString
 
-
 def build_document(content, metadata, id):
     """Create a standardized document."""
     return Document(page_content=content, metadata=metadata, id=id)
@@ -28,6 +27,7 @@ def extract_title(soup):
     if soup.title:
         return soup.title.get_text(strip=True)
     return "Untitled"
+
 
 def extract_code_blocks(soup, tag, placeholder_template: str, index_start = 0):
     """

@@ -1,6 +1,6 @@
 import os
 from bs4 import BeautifulSoup
-from .helpers.filter_functions import (
+from .preprocessing_utils import (
     remove_tags,
     remove_html_comments,
     get_visible_text_length,

@@ -2,7 +2,7 @@ from .plugin_names_scraper import start_plugin_names_scraper
 import os
 from bs4 import BeautifulSoup
 import requests
-from ..utils import retry_until_success
+from ..collection_utils import retry_until_success
 from pathlib import Path
 from typing import Optional
 from ...tools.common import write_json_file, read_json_file

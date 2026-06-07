@@ -1,7 +1,7 @@
 import os
-from .helpers import build_document
+from .formatting_utils import build_document
 from ..tools.common import read_json_file, write_json_file
-from .helpers import extract_code_blocks
+from .formatting_utils import extract_code_blocks
 from langchain_core.documents import Document
 from bs4 import BeautifulSoup
 from datetime import datetime 

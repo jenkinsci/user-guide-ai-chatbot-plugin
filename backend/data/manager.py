@@ -1,6 +1,6 @@
 from data.collection.collectors import start_collectors
-from .preprocessing.processor import start_processors
-from .formatting.formatter import start_formatters
+from .preprocessing.processors import start_processors
+from .formatting.formatters import start_formatters
 from .embedding.embedder import start_embedder
 
 import os
@@ -90,9 +90,7 @@ def collector_menu() -> list[DataSource]:
     return list(selected_sources)
 
 
-def start_manager():
-    selected_sources = collector_menu()
-
+def start_data_pipeline(selected_sources: list[DataSource]):
     if not selected_sources: 
         print("---- NO DATA SOURCE SELECTED ----")
         return
@@ -131,6 +129,11 @@ def start_manager():
                     indent=4,
                     default=datetime_serializer,
                     ensure_ascii=False)
+
+
+def start_manager():
+    selected_sources = collector_menu()
+    start_data_pipeline(selected_sources)
 
 
 if __name__ == "__main__":

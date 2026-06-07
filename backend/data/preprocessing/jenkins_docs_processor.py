@@ -1,14 +1,14 @@
 import os
 from bs4 import BeautifulSoup
-from .helpers.filter_functions import (
+from .preprocessing_utils import (
     remove_container_by_class,
     remove_tags,
     extract_page_content_container,
     remove_html_comments,
     remove_edge_navigation_blocks,
-    strip_html_body_wrappers
+    strip_html_body_wrappers,
+    split_doc_types
 )
-from .helpers.split_doc_types import split_doc_types
 from ..tools.common import read_json_file, write_json_file, convert_date_str_in_iso
 
 

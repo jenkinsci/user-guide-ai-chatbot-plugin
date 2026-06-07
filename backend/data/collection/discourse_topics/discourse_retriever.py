@@ -1,9 +1,9 @@
 import requests
 from typing import Dict, List, Optional
-from .helpers import build_discourse_endpoint, build_topic_tree, export_topics_to_json, print_topic_preview
+from .discourse_topics_utils import build_discourse_endpoint, build_topic_tree, export_topics_to_json, print_topic_preview
 from .models import TopicCollection, TopicDetails, SearchFilters, SolutionPost
 import time
-from ..utils import retry_until_success
+from ..collection_utils import retry_until_success
 import os
 
 
