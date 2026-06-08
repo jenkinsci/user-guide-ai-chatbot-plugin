@@ -7,8 +7,8 @@ from pydantic import BaseModel
 class SearchFilters:
     """Stores filters for searching topics"""
     category_slug: str
-    subcategory_slug: str
-    tag_slug: str
+    subcategory_slug: str | None
+    tag_slug: str | None
 
 
 class TopicSummary(BaseModel):

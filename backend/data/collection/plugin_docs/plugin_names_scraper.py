@@ -36,28 +36,18 @@ def fetch_plugin_names() -> List[str]:
     return plugin_list
 
 
-def save_plugin_names(plugin_names_with_extension: list[str]):
-    """
-    Remove `.hpi` extensions and save plugin names to a JSON file.
 
-    Args:
-        plugin_names_with_extension (list[str]): List of plugin filenames with `.hpi` extension.
-    """
-
+def start_plugin_names_scraper():
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "plugin_names.json")
 
-    plugin_names = [plugin_name.split(".")[0] for plugin_name in plugin_names_with_extension]
+    plugins = fetch_plugin_names()
+
+    plugin_names = [plugin_name.split(".")[0] for plugin_name in plugins]
 
     write_json_file(OUTPUT_PATH, plugin_names, indent=2, ensure_ascii=False)
-
-        
     print(f"Saved plugin list to {OUTPUT_PATH}")
 
-
-def start_plugin_names_scraper():
-    plugins = fetch_plugin_names()
-    save_plugin_names(plugins)
 
 
 if __name__ == "__main__":

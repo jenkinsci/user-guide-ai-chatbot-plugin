@@ -5,13 +5,13 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pathlib import Path
 from ..tools.common import read_json_file, write_json_file
-from embedding_utils import assign_code_blocks_to_chunks
+from .embedding_utils import assign_code_blocks_to_chunks
+from ..models import DataSource 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DOCUMENTS_DIR = os.path.join(SCRIPT_DIR, "..", "output", "documents")
 CHUNKS_DIR = os.path.join(SCRIPT_DIR, "..", "output", "chunks")
 CHROMA_DIR = os.path.join(SCRIPT_DIR, "..", "output", "production", "chromadb")
-FOLDERS = ["jenkins_docs", "plugin_docs", "discourse_topics", "reddit_threads", "code_blocks"]
 CB_PATH = Path(DOCUMENTS_DIR, "code_blocks")
 
 
@@ -45,7 +45,8 @@ def bind_chunks_to_code_blocks(chunks: list[Document], doc_id: str) -> list[Docu
         chunk: Document = r["chunk"]
         code_blocks: list[Document] = r["code_blocks"]
 
-        chunk.metadata["n_cbs"] = len(code_blocks)
+        if len(code_blocks) > 0:
+            chunk.metadata["cb_ids"] = [cb.id for cb in code_blocks]
 
         updated_chunks.append(chunk)
 
@@ -131,9 +132,10 @@ def process_docs_with_sliding_window(documents: list[Document], source: str) -> 
         
     return processed_chunks, chunk_ids
 
-
-def start_embedder():
+def embedder(sources: list[DataSource]):
     """ Start embedder. """
+
+    SOURCES = [*[s.value for s in sources], "code_blocks"]
     embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2") # 384 dim 
 
     vector_store = Chroma(
@@ -143,7 +145,7 @@ def start_embedder():
         #host="" only if there's a chromadb instance running
     )
 
-    for source in FOLDERS:
+    for source in SOURCES:
         SOURCE_DIR = Path(DOCUMENTS_DIR, source)
         documents: list[Document] = []
 
@@ -172,8 +174,14 @@ def start_embedder():
 
             # Add the new ones
             ids = vector_store.add_documents(batch, ids=batch_ids)
-            
+     
+
+def start_embedder(sources: list[DataSource]):
+    print("--------- START EMBEDDING PHASE ---------")
+    embedder(sources)
+    print("--------- END EMBEDDING PHASE ---------")
+
 
 if __name__ == "__main__":
-    start_embedder()
+    start_embedder([DataSource.JENKINS_DOCS, DataSource.PLUGIN_DOCS, DataSource.DISCOURSE_TOPICS, DataSource.REDDIT_THREADS])
  

@@ -5,6 +5,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from ...tools.common import write_json_file
+from .jenkins_docs_utils import extract_page_content_container, is_valid_url, normalize_url
 
 
 BASE_URL = "https://www.jenkins.io/doc/"
@@ -35,36 +36,6 @@ def create_session_with_retries() -> requests.Session:
 data = {}
 non_canonic_content_urls = set()
 
-
-def normalize_url(url):
-    """Normalize URL by adding trailing slash for non-HTML pages."""
-    if '.html' not in url and not url.endswith('/'):
-        url += '/'
-    return url
-
-
-def is_valid_url(url):
-    """Check if the URL is a valid link to a new page, internal to the doc, 
-        or a redirect to another page
-    """
-    parsed = urlparse(url)
-    return parsed.scheme in {"http", "https"} and BASE_URL in url and "#" not in url
-
-
-def extract_page_content_container(soup):
-    """Extract main content from the page.
-
-    Developer docs use col-8, non-developer docs use col-lg-9.
-    Falls back to container if neither is found.
-    """
-    content_div = (
-        soup.find("div", class_="col-8")
-        or soup.find("div", class_="col-lg-9")
-        or soup.find("div", class_="container")
-    )
-    if content_div:
-        return str(content_div)
-    return ""
 
 
 def get_current_jenkins_docs_version(session: requests.Session):
@@ -120,7 +91,7 @@ def crawl(start_url):
         url = normalize_url(url)
 
         # Fast skip for already visited or invalid URLs
-        if url in visited_urls or not is_valid_url(url):
+        if url in visited_urls or not is_valid_url(url, BASE_URL):
             continue
       
         print(f"Visiting: {url}")
@@ -148,7 +119,7 @@ def crawl(start_url):
                 full_url = urljoin(url, str(href))
                 # Normalize before pushing to prevent duplicate stack entries
                 full_url = normalize_url(full_url)
-                if is_valid_url(full_url) and full_url not in visited_urls:
+                if is_valid_url(full_url, BASE_URL) and full_url not in visited_urls:
                     stack.append(full_url)
 
         except requests.RequestException as e:

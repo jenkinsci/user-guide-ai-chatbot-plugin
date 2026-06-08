@@ -1,8 +1,6 @@
-from typing import Optional, List, Dict, Any
-from .models import Post, TopicDetails
-from pathlib import Path
-import json
-
+from typing import List, Dict, Any
+from .models import Post, TopicDetails, SearchFilters
+from ...tools.common import write_json_file
 
 
 def print_topic_preview(topic_details: TopicDetails):
@@ -16,9 +14,7 @@ def print_topic_preview(topic_details: TopicDetails):
 
 def build_discourse_endpoint(
     base_url: str, 
-    category_slug: Optional[str] = None, 
-    subcategory_slug: Optional[str] = None, 
-    tag_slug: Optional[str] = None
+    search_filters: SearchFilters
 ) -> str:
     """
     Builds the correct Discourse API endpoint based on the provided filters.
@@ -34,6 +30,10 @@ def build_discourse_endpoint(
         
     """
     base = base_url.rstrip('/')
+
+    category_slug = search_filters.category_slug
+    subcategory_slug = search_filters.subcategory_slug
+    tag_slug = search_filters.tag_slug
     
     # Filtering with a Tag
     if tag_slug:
@@ -110,16 +110,7 @@ def export_topics_to_json(topic_list: List[TopicDetails], file_path: str):
         }
 
     try:
-        path = Path(file_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(path, 'w', encoding='utf-8') as output_file:
-            json.dump(
-                final_output_dict, 
-                output_file, 
-                indent=4,                     
-                ensure_ascii=False
-            )
+        write_json_file(file_path, final_output_dict, indent=4, ensure_ascii=False)
         print(f"Successfully saved {topic_length} posts with nested comments to '{file_path}'.")
         
     except IOError as file_error:
@@ -127,6 +118,5 @@ def export_topics_to_json(topic_list: List[TopicDetails], file_path: str):
 
 
 if __name__ == "__main__":
-    # topics_detail = [TopicDetail(topic_id=0, title="Jonh", posts=[Post(id=1, post_number=3, username= "Mario", content="ciao a tutti!", created_at="2026-05-14T11:20:33.214Z", is_solution=False, replies=[], reply_to_post_number=None)], has_solution=False)]
-    # export_topics_to_json(topics_detail, "data/raw/dump.json")
-    pass
+    topics_detail = [TopicDetails(topic_id=0, title="Jonh", posts=[Post(id=1, post_number=3, username= "Mario", content="ciao a tutti!", created_at="2026-05-14T11:20:33.214Z", is_solution=False, replies=[], reply_to_post_number=None, reactions=[], url="")], )]
+    export_topics_to_json(topics_detail, "data/raw/dump.json")

@@ -31,9 +31,7 @@ def fetch_topic_previews(
     # Generate the dynamic endpoint
     endpoint = build_discourse_endpoint(
         base_url=base_url,
-        category_slug=search_filters.category_slug,
-        subcategory_slug=search_filters.subcategory_slug,
-        tag_slug=search_filters.tag_slug
+        search_filters=search_filters
     )
     
     print(f"[*] Hitting endpoint: {endpoint}")

@@ -1,5 +1,5 @@
-from .reddit_threads.reddit_scraper import start_reddit_threads_scraper
-from .discourse_topics.discourse_retriever import start_discourse_topics_retriever
+from .reddit_threads.reddit_threads_scraper import start_reddit_threads_scraper
+from .discourse_topics.discourse_topics_retriever import start_discourse_topics_retriever
 from .jenkins_docs.jenkins_docs_scraper import start_jenkins_docs_scraper
 from .plugin_docs.plugin_docs_scraper import start_plugin_docs_scraper
 from ..models import DataSource

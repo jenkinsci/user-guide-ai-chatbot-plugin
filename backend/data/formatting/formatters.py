@@ -1,7 +1,7 @@
 from .jenkins_docs_formatter import start_jenkins_docs_formatter
 from .plugin_docs_formatter import start_plugin_docs_formatter
-from .discourse_formatter import start_discourse_formatter
-from .reddit_formatter import start_reddit_formatter 
+from .discourse_topics_formatter import start_discourse_formatter
+from .reddit_threads_formatter import start_reddit_formatter 
 from ..models import DataSource
 
 

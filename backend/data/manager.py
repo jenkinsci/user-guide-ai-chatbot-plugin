@@ -114,7 +114,7 @@ def start_data_pipeline(selected_sources: list[DataSource]):
         elif phase == DataPhase.FORMATTING:
             start_formatters(selected_sources)
         elif phase == DataPhase.EMBEDDING:
-            start_embedder()
+            start_embedder(selected_sources)
 
         phase_obj["end_date"] = datetime.now()
         manager_logs["phases"].append(phase_obj)
