@@ -5,21 +5,22 @@ import os
 
 def process_threads(posts: list[dict]):
     """
-        Process threads by keeping only useful question + answer pairs
+    Process threads by keeping only useful question + answer pairs
 
-        Args: 
-            topics: list[dict]
+    Args:
+        topics: list[dict]
 
-        Returns: 
-            list[dict]
+    Returns:
+        list[dict]
     """
 
-    # Each useful answer will be paired in the same document with his matching question 
+    # Each useful answer will be paired in the same document with his matching question
     conversations = []
 
-    for post in posts: 
+    for post in posts:
         for comment in post["comments"][:3]:
-            if comment["id"] == "unknown": continue
+            if comment["id"] == "unknown":
+                continue
             new_conversation = {}
 
             # Keeping comments with more than 3 upvotes and a length greater than 20
@@ -31,27 +32,25 @@ def process_threads(posts: list[dict]):
                 new_conversation["answer"] = comment["content"]
                 new_conversation["created_at"] = comment["create_date"]
                 new_conversation["upvotes"] = post["points"]
-                
+
                 conversations.append(new_conversation)
 
-    return conversations    
+    return conversations
 
 
 def reddit_threads_processor(output_dir: Path):
     """Start Reddit threads processor."""
     INPUT_FILE_PATH = output_dir / "raw" / "reddit_threads.json"
-    OUTPUT_FILE_PATH = output_dir /"processed" / "reddit_threads.json"
+    OUTPUT_FILE_PATH = output_dir / "processed" / "reddit_threads.json"
 
     data = read_json_file(INPUT_FILE_PATH)
 
     filtered_data = process_threads(data["threads"])
 
-    result = {
-        "threads": filtered_data,
-        "length": len(filtered_data)
-    }
-    
+    result = {"threads": filtered_data, "length": len(filtered_data)}
+
     saved = write_json_file(OUTPUT_FILE_PATH, result)
+
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

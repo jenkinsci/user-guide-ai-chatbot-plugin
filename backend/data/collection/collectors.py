@@ -8,7 +8,7 @@ import os
 
 
 def start_collectors(sources: list[DataSource], output_dir: Path):
-    """ Start collectors """
+    """Start collectors"""
 
     collector_functions = {
         DataSource.JENKINS_DOCS: jenkins_docs_scraper,
@@ -18,10 +18,10 @@ def start_collectors(sources: list[DataSource], output_dir: Path):
     }
 
     print("--------- START COLLECTION PHASE ---------")
-    for source in sources: 
+    for source in sources:
         func = collector_functions[source]
         if func:
-            print(f"EXECUTING {source} COLLECTOR") 
+            print(f"EXECUTING {source} COLLECTOR")
             func(output_dir)
     print("--------- END COLLECTION PHASE ---------")
 
@@ -29,4 +29,12 @@ def start_collectors(sources: list[DataSource], output_dir: Path):
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
-    start_collectors([DataSource.JENKINS_DOCS, DataSource.PLUGIN_DOCS, DataSource.DISCOURSE_TOPICS, DataSource.REDDIT_THREADS], OUTPUT_DIR)
+    start_collectors(
+        [
+            DataSource.JENKINS_DOCS,
+            DataSource.PLUGIN_DOCS,
+            DataSource.DISCOURSE_TOPICS,
+            DataSource.REDDIT_THREADS,
+        ],
+        OUTPUT_DIR,
+    )

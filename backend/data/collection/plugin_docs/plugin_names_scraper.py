@@ -5,10 +5,11 @@ from typing import List
 from ...tools.common import write_json_file
 from pathlib import Path
 
+
 def fetch_plugin_names() -> List[str]:
     """
     Fetches a list of available plugin artifact names (.hpi) from the Jenkins update site.
-    
+
     Returns:
         list[str]: List of raw plugin file names (e.g., 'git.hpi', 'docker-slaves.hpi').
     """
@@ -36,7 +37,6 @@ def fetch_plugin_names() -> List[str]:
     return plugin_list
 
 
-
 def plugin_names_scraper(output_dir: Path):
     OUTPUT_FILE_PATH = output_dir / "raw" / "plugin_names.json"
 
@@ -46,7 +46,6 @@ def plugin_names_scraper(output_dir: Path):
 
     write_json_file(OUTPUT_FILE_PATH, plugin_names, indent=2, ensure_ascii=False)
     print(f"Saved plugin list to {OUTPUT_FILE_PATH}")
-
 
 
 if __name__ == "__main__":

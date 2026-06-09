@@ -4,14 +4,14 @@ from bs4 import BeautifulSoup
 
 def normalize_url(url: str):
     """Normalize URL by adding trailing slash for non-HTML pages."""
-    if '.html' not in url and not url.endswith('/'):
-        url += '/'
+    if ".html" not in url and not url.endswith("/"):
+        url += "/"
     return url
 
 
 def is_valid_url(url: str, base_url: str):
-    """Check if the URL is a valid link to a new page, internal to the doc, 
-        or a redirect to another page
+    """Check if the URL is a valid link to a new page, internal to the doc,
+    or a redirect to another page
     """
     parsed = urlparse(url)
     return parsed.scheme in {"http", "https"} and base_url in url and "#" not in url

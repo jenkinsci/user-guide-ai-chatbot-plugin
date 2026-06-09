@@ -7,8 +7,10 @@ import models
 # 0. SHARED CONFIGURATION
 # ==========================================
 
+
 class BaseConfigModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
 
 class ResponseModel(BaseConfigModel):
     """
@@ -17,7 +19,9 @@ class ResponseModel(BaseConfigModel):
     It tells Pydantic to read data using the dot notation (e.g. object.field)
     from SQLAlchemy database objects.
     """
+
     model_config = ConfigDict(from_attributes=True)
+
 
 class DeleteResponse(BaseModel):
     n_entities_deleted: int

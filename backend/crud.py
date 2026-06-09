@@ -1,5 +1,3 @@
 import pytz
 
-
-utc= pytz.UTC
-
+utc = pytz.UTC

@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup, Comment
 
+
 def extract_page_content_container(soup, class_name):
     """
     Extracts the HTML content of the first div with the given class name.
@@ -41,11 +42,11 @@ def remove_container_by_class(content, class_name):
 def remove_tags(content, tags_to_remove=None):
     """
     Removes all specified tags from the given HTML content.
-    
+
     Parameters:
     - content (str): The HTML string to clean.
     - tags_to_remove (list of str): Tag names to remove (e.g., ["img", "script"]).
-    
+
     Returns:
     - str: Cleaned HTML content with specified tags removed.
     """
@@ -82,10 +83,10 @@ def remove_edge_navigation_blocks(content):
             return False
         children = div.find_all(recursive=False)
         return (
-            len(children) == 1 and
-            children[0].name == "div" and
-            "row" in children[0].get("class", []) and
-            "body" not in children[0].get("class", [])
+            len(children) == 1
+            and children[0].name == "div"
+            and "row" in children[0].get("class", [])
+            and "body" not in children[0].get("class", [])
         )
 
     # Remove top navigation block
@@ -97,7 +98,9 @@ def remove_edge_navigation_blocks(content):
     children = container.find_all(recursive=False)
     is_navigation_block_found = False
     for i, div in enumerate(children):
-        if is_navigation_block(div) or (div.name == "div" and div.get("id") == "feedback"):
+        if is_navigation_block(div) or (
+            div.name == "div" and div.get("id") == "feedback"
+        ):
             for div_to_remove in children[i:]:
                 div_to_remove.extract()
             is_navigation_block_found = True
@@ -157,4 +160,6 @@ def strip_html_body_wrappers(html):
            or the full HTML if no <body> is present.
     """
     soup = BeautifulSoup(html, "lxml")
-    return ''.join(str(child) for child in soup.body.contents) if soup.body else str(soup)
+    return (
+        "".join(str(child) for child in soup.body.contents) if soup.body else str(soup)
+    )

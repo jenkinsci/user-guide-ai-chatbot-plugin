@@ -2,15 +2,16 @@ from ..tools.common import read_json_file, write_json_file
 from pathlib import Path
 import os
 
+
 def process_topics(topics: list[dict]):
     """
-        Process topics by keeping only useful question + answer pairs
+    Process topics by keeping only useful question + answer pairs
 
-        Args: 
-            topics: list[dict]
+    Args:
+        topics: list[dict]
 
-        Returns: 
-            list[dict]
+    Returns:
+        list[dict]
     """
 
     topics_processed = []
@@ -19,7 +20,7 @@ def process_topics(topics: list[dict]):
         # Keeping comments marked as solution
         if len(topic["solutions"]) > 0:
             for sol in topic["solutions"]:
-                new_topic = {} 
+                new_topic = {}
                 new_topic["topic_id"] = topic["topic_id"]
                 new_topic["answer_id"] = sol["id"]
                 new_topic["title"] = topic["title"]
@@ -29,7 +30,7 @@ def process_topics(topics: list[dict]):
                 new_topic["url"] = sol["url"]
                 new_topic["is_solution"] = True
                 topics_processed.append(new_topic)
-        else: 
+        else:
             # Keeping comments with more than 2 approval reactions
             approval_reaction_ids = ["heart"]
             for post in topic["posts"]:
@@ -40,7 +41,7 @@ def process_topics(topics: list[dict]):
                         approval_reaction_found += 1
 
                 if approval_reaction_found >= 2:
-                    new_topic = {} 
+                    new_topic = {}
                     new_topic["topic_id"] = topic["topic_id"]
                     new_topic["answer_id"] = post["id"]
                     new_topic["title"] = topic["title"]
@@ -50,23 +51,20 @@ def process_topics(topics: list[dict]):
                     new_topic["url"] = post["url"]
                     new_topic["is_solution"] = False
                     topics_processed.append(new_topic)
-                    
+
     return topics_processed
 
 
 def discourse_topics_processor(output_dir: Path):
     """Start Discourse topics processor."""
-    
+
     INPUT_FILE_PATH = output_dir / "raw" / "discourse_topics.json"
     OUTPUT_FILE_PATH = output_dir / "processed" / "discourse_topics.json"
 
     data = read_json_file(INPUT_FILE_PATH)
     topics_processed = process_topics(data["topics"])
 
-    result = {
-        "topics": topics_processed,
-        "length": len(topics_processed)
-    }
+    result = {"topics": topics_processed, "length": len(topics_processed)}
 
     saved = write_json_file(OUTPUT_FILE_PATH, result)
 

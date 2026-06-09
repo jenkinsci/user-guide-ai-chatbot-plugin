@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
- 
+
+
 def split_doc_types(data: dict[str, str]):
     """
     Splits documentation pages into developer and non-developer types by checking the url
@@ -21,10 +22,9 @@ def split_doc_types(data: dict[str, str]):
         path_parts = [part for part in path.split("/") if part]
         second_arg = path_parts[1] if len(path_parts) > 1 else None
 
-        if second_arg == "developer": 
+        if second_arg == "developer":
             developer_urls.append(url)
         else:
             non_developer_urls.append(url)
-    
 
     return developer_urls, non_developer_urls

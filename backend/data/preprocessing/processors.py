@@ -8,7 +8,7 @@ import os
 
 
 def start_processors(sources: list[DataSource], output_dir: Path):
-    """ Start processors """
+    """Start processors"""
 
     processing_functions = {
         DataSource.JENKINS_DOCS: jenkins_docs_processor,
@@ -18,10 +18,10 @@ def start_processors(sources: list[DataSource], output_dir: Path):
     }
 
     print("--------- START PREPROCESSING PHASE ---------")
-    for source in sources: 
+    for source in sources:
         func = processing_functions[source]
         if func:
-            print(f"EXECUTING {source} PROCESSOR") 
+            print(f"EXECUTING {source} PROCESSOR")
             func(output_dir)
     print("--------- END PREPROCESSING PHASE ---------")
 
@@ -29,5 +29,12 @@ def start_processors(sources: list[DataSource], output_dir: Path):
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
-    start_processors([DataSource.JENKINS_DOCS, DataSource.PLUGIN_DOCS, DataSource.DISCOURSE_TOPICS, DataSource.REDDIT_THREADS], OUTPUT_DIR)
- 
+    start_processors(
+        [
+            DataSource.JENKINS_DOCS,
+            DataSource.PLUGIN_DOCS,
+            DataSource.DISCOURSE_TOPICS,
+            DataSource.REDDIT_THREADS,
+        ],
+        OUTPUT_DIR,
+    )

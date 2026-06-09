@@ -5,7 +5,4 @@ from typing import List
 from database import get_db
 import schemas, crud, models
 
-router = APIRouter(
-    prefix="/api/auth",
-    tags=["Auth"]
-)
+router = APIRouter(prefix="/api/auth", tags=["Auth"])

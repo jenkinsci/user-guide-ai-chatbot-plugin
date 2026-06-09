@@ -3,11 +3,10 @@ from .formatting_utils import build_document
 from ..tools.common import read_json_file, write_json_file
 from .formatting_utils import extract_code_blocks
 from bs4 import BeautifulSoup
-from datetime import datetime 
+from datetime import datetime
 from langchain_core.documents import Document
 from ..models import DataSource
 from pathlib import Path
-
 
 REDDIT_ID_TEMPLATE = "R_{}"
 REDDIT_CB_ID_TEMPLATE = "CB_{}_N_{}"
@@ -26,7 +25,7 @@ def process_thread(thread: dict):
         thread (dict)
 
     Returns:
-        tuple[Document, list[Document]]: A Tuple containing a Document with a Reddit Q+A Pair and metadata 
+        tuple[Document, list[Document]]: A Tuple containing a Document with a Reddit Q+A Pair and metadata
                                         and a Document list containing docs codeblocks and their metadata.
     """
     post_id = str(thread.get("post_id"))
@@ -36,13 +35,15 @@ def process_thread(thread: dict):
     answer_html = thread.get("answer", "")
     created_at = thread.get("created_at", "")
     upvotes = thread.get("upvotes", 0)
-    
+
     question_soup = BeautifulSoup(question_html, "lxml")
     answer_soup = BeautifulSoup(answer_html, "lxml")
-    
+
     code_blocks = []
     question_cb = extract_code_blocks(question_soup, ["pre"], PLACEHOLDER_TEMPLATE)
-    answer_cb = extract_code_blocks(answer_soup, ["pre"], PLACEHOLDER_TEMPLATE, index_start=len(question_cb))
+    answer_cb = extract_code_blocks(
+        answer_soup, ["pre"], PLACEHOLDER_TEMPLATE, index_start=len(question_cb)
+    )
     code_blocks.extend(question_cb)
     code_blocks.extend(answer_cb)
 
@@ -67,12 +68,12 @@ def process_thread(thread: dict):
                 "upvotes": upvotes,
                 "created_at": created_at,
             },
-            id=id
+            id=id,
         ),
         [
             build_document(
-                cb, 
-                {   
+                cb,
+                {
                     "data_source": DataSource.REDDIT_THREADS.value,
                     "post_id": post_id,
                     "reply_id": reply_id,
@@ -81,12 +82,12 @@ def process_thread(thread: dict):
                     "created_at": created_at,
                     "cb_index": i,
                 },
-            id=REDDIT_CB_ID_TEMPLATE.format(id, i)
+                id=REDDIT_CB_ID_TEMPLATE.format(id, i),
             )
             for i, cb in enumerate(code_blocks)
-        ]
+        ],
     )
- 
+
 
 def process_threads(threads: list[dict]):
     """
@@ -122,13 +123,11 @@ def reddit_formatter(output_path: Path):
 
     documents, code_blocks = process_threads(data["threads"])
 
-    for doc in documents: 
+    for doc in documents:
         write_json_file(f"{DOCUMENTS_OUTPUT_DIR}/{doc.id}.json", doc.model_dump())
 
-    for cb in code_blocks: 
+    for cb in code_blocks:
         write_json_file(f"{CODE_BLOCKS_OUTPUT_DIR}/{cb.id}.json", cb.model_dump())
-
-
 
 
 if __name__ == "__main__":

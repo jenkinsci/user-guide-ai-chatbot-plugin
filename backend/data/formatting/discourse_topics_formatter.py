@@ -4,11 +4,9 @@ from ..tools.common import read_json_file, write_json_file
 from .formatting_utils import extract_code_blocks
 from langchain_core.documents import Document
 from bs4 import BeautifulSoup
-from datetime import datetime 
+from datetime import datetime
 from ..models import DataSource
 from pathlib import Path
-
-
 
 PLACEHOLDER_TEMPLATE = "[[CODE_BLOCK_{}]]"
 
@@ -27,7 +25,7 @@ def process_topic(topic: dict):
         topic (dict)
 
     Returns:
-        tuple[Document, list[Document]]: A Tuple containing a Document with a Discourse Q+A Pair and metadata 
+        tuple[Document, list[Document]]: A Tuple containing a Document with a Discourse Q+A Pair and metadata
                                         and a Document list containing docs codeblocks and their metadata.
     """
     topic_id = str(topic.get("topic_id"))
@@ -38,13 +36,15 @@ def process_topic(topic: dict):
     created_at = topic.get("created_at", "")
     url = topic.get("url", "")
     is_solution = topic.get("is_solution", False)
-    
+
     question_soup = BeautifulSoup(question_html, "lxml")
     answer_soup = BeautifulSoup(answer_html, "lxml")
-    
+
     code_blocks = []
     question_cb = extract_code_blocks(question_soup, ["pre"], PLACEHOLDER_TEMPLATE)
-    answer_cb = extract_code_blocks(answer_soup, ["pre"], PLACEHOLDER_TEMPLATE, index_start=len(question_cb))
+    answer_cb = extract_code_blocks(
+        answer_soup, ["pre"], PLACEHOLDER_TEMPLATE, index_start=len(question_cb)
+    )
     code_blocks.extend(question_cb)
     code_blocks.extend(answer_cb)
 
@@ -69,12 +69,12 @@ def process_topic(topic: dict):
                 "is_solution": is_solution,
                 "created_at": created_at,
             },
-            id=id
+            id=id,
         ),
         [
             build_document(
-                cb, 
-                {   
+                cb,
+                {
                     "data_source": DataSource.DISCOURSE_TOPICS.value,
                     "topic_id": topic_id,
                     "answer_id": answer_id,
@@ -84,12 +84,12 @@ def process_topic(topic: dict):
                     "created_at": created_at,
                     "cb_index": i,
                 },
-            id=DISCOURSE_CB_ID_TEMPLATE.format(id, i)
+                id=DISCOURSE_CB_ID_TEMPLATE.format(id, i),
             )
             for i, cb in enumerate(code_blocks)
-        ]
+        ],
     )
- 
+
 
 def process_topics(topics: list[dict]):
     """
@@ -118,7 +118,7 @@ def discourse_formatter(output_dir: Path):
 
     INPUT_FILE_PATH = output_dir / "processed" / "discourse_topics.json"
     DOCUMENTS_OUTPUT_DIR = output_dir / "documents" / "discourse_topics"
-    CODE_BLOCKS_OUTPUT_DIR = output_dir / "documents" / "code_blocks" 
+    CODE_BLOCKS_OUTPUT_DIR = output_dir / "documents" / "code_blocks"
 
     data = read_json_file(INPUT_FILE_PATH)
     if not data:
@@ -126,10 +126,10 @@ def discourse_formatter(output_dir: Path):
 
     documents, code_blocks = process_topics(data["topics"])
 
-    for doc in documents: 
+    for doc in documents:
         write_json_file(f"{DOCUMENTS_OUTPUT_DIR}/{doc.id}.json", doc.model_dump())
 
-    for cb in code_blocks: 
+    for cb in code_blocks:
         write_json_file(f"{CODE_BLOCKS_OUTPUT_DIR}/{cb.id}.json", cb.model_dump())
 
 

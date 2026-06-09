@@ -6,31 +6,42 @@ from .chunking_utils import assign_code_blocks_to_chunks
 from pathlib import Path
 import os
 
-CHUNK_ID_TEMPLATE ="{}_C_{}"
+CHUNK_ID_TEMPLATE = "{}_C_{}"
 
 CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
 PLACEHOLDER_TEMPLATE = "[[CODE_BLOCK_{}]]"
 
-def bind_chunks_to_code_blocks(chunks: list[Document], doc_id: str, code_blocks_dir: Path) -> list[Document]:
-    """
-       Bind each chunk to its specific code blocks by placing its ID inside the corresponding code block metadata.
 
-       Returns: 
-            tuple[list[Document], list[str]]: Chunk list
+def bind_chunks_to_code_blocks(
+    chunks: list[Document], doc_id: str, code_blocks_dir: Path
+) -> list[Document]:
+    """
+    Bind each chunk to its specific code blocks by placing its ID inside the corresponding code block metadata.
+
+    Returns:
+         tuple[list[Document], list[str]]: Chunk list
     """
 
     cbs = []
-    cb_files = [file for file in code_blocks_dir.glob(f'CB_{doc_id}*.json') if file.is_file()]
+    cb_files = [
+        file for file in code_blocks_dir.glob(f"CB_{doc_id}*.json") if file.is_file()
+    ]
 
-    for cb_file in cb_files: 
+    for cb_file in cb_files:
         data = read_json_file(cb_file)
-        cbs.append(Document(page_content=data["page_content"], metadata=data["metadata"], id=data["id"]))
+        cbs.append(
+            Document(
+                page_content=data["page_content"],
+                metadata=data["metadata"],
+                id=data["id"],
+            )
+        )
 
-    results = assign_code_blocks_to_chunks(chunks, cbs, CODE_BLOCK_PLACEHOLDER_PATTERN) 
+    results = assign_code_blocks_to_chunks(chunks, cbs, CODE_BLOCK_PLACEHOLDER_PATTERN)
 
     updated_chunks: list[Document] = []
     updated_cbs: list[Document] = []
-    
+
     for r in results:
         chunk: Document = r["chunk"]
         code_blocks: list[Document] = r["code_blocks"]
@@ -50,12 +61,14 @@ def bind_chunks_to_code_blocks(chunks: list[Document], doc_id: str, code_blocks_
     return updated_chunks
 
 
-def process_doc(doc: Document, text_splitter: RecursiveCharacterTextSplitter) -> tuple[list[Document], list[str]]:
+def process_doc(
+    doc: Document, text_splitter: RecursiveCharacterTextSplitter
+) -> tuple[list[Document], list[str]]:
     """
-        Process a specific Document and returns a chunk list the chunk id list
+    Process a specific Document and returns a chunk list the chunk id list
 
-        Returns: 
-            tuple[list[Document], list[str]]: Chunk list and chunk id list
+    Returns:
+        tuple[list[Document], list[str]]: Chunk list and chunk id list
     """
 
     processed_chunks = []
@@ -73,12 +86,10 @@ def process_doc(doc: Document, text_splitter: RecursiveCharacterTextSplitter) ->
         }
 
         chunk_id = CHUNK_ID_TEMPLATE.format(doc.id, current_index)
-        
+
         # Create the LangChain Document
         chunk_doc = Document(
-            page_content=text_fragment,
-            metadata=chunk_metadata,
-            id=chunk_id
+            page_content=text_fragment, metadata=chunk_metadata, id=chunk_id
         )
 
         chunk_ids.append(chunk_id)
@@ -87,26 +98,25 @@ def process_doc(doc: Document, text_splitter: RecursiveCharacterTextSplitter) ->
     return processed_chunks, chunk_ids
 
 
-def process_docs_with_sliding_window(documents: list[Document], source: str, code_blocks_dir: Path) -> tuple[list[Document], list[str]]:
+def process_docs_with_sliding_window(
+    documents: list[Document], source: str, code_blocks_dir: Path
+) -> tuple[list[Document], list[str]]:
     """
-        Process Documents using a sliding window approach.
-        Means no chunk overlap and the hybrid retriever when retrieving a specific chunk will also 
-        fetch back the n previous chunks and n consequent chunks. 
+    Process Documents using a sliding window approach.
+    Means no chunk overlap and the hybrid retriever when retrieving a specific chunk will also
+    fetch back the n previous chunks and n consequent chunks.
 
-        Args: 
-            documents (list[Document])
-            source (str): source name
+    Args:
+        documents (list[Document])
+        source (str): source name
 
-        Returns: 
-            tuple[list[Document], list[str]]: Chunk list and chunk id list
+    Returns:
+        tuple[list[Document], list[str]]: Chunk list and chunk id list
     """
     processed_chunks: list[Document] = []
     chunk_ids = []
 
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=0 
-    )
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
 
     for doc in documents:
         # Splitting document in chunks
@@ -114,41 +124,48 @@ def process_docs_with_sliding_window(documents: list[Document], source: str, cod
         updated_chunks = chunks
 
         if source != "code_blocks":
-           updated_chunks = bind_chunks_to_code_blocks(chunks, str(doc.id), code_blocks_dir)
+            updated_chunks = bind_chunks_to_code_blocks(
+                chunks, str(doc.id), code_blocks_dir
+            )
 
         processed_chunks.extend(updated_chunks)
         chunk_ids.extend(c_ids)
 
-        
     return processed_chunks, chunk_ids
 
 
 def chunker(sources: list[DataSource], output_dir: Path):
-    """ Start embedder. """
+    """Start embedder."""
 
     DOCUMENTS_DIR = output_dir / "documents"
     CODE_BLOCKS_DIR = DOCUMENTS_DIR / "code_blocks"
     CHUNKS_DIR = output_dir / "chunks"
 
     SOURCES = [*[s.value for s in sources], "code_blocks"]
-    
+
     for source in SOURCES:
         SOURCE_DIR = DOCUMENTS_DIR / source
         documents: list[Document] = []
 
-        for file_path in SOURCE_DIR.glob('*.json'):
+        for file_path in SOURCE_DIR.glob("*.json"):
             data = read_json_file(file_path)
-            doc = Document(page_content=data["page_content"], metadata=data["metadata"], id=data["id"])
+            doc = Document(
+                page_content=data["page_content"],
+                metadata=data["metadata"],
+                id=data["id"],
+            )
             documents.append(doc)
-        
+
         documents_length = len(documents)
-        if documents_length > 0: 
+        if documents_length > 0:
             print(f"Chunking {source}: {documents_length} documents")
-        else: 
+        else:
             print(f"No document for {source}")
             continue
 
-        chunks, chunk_ids = process_docs_with_sliding_window(documents, source, CODE_BLOCKS_DIR)
+        chunks, chunk_ids = process_docs_with_sliding_window(
+            documents, source, CODE_BLOCKS_DIR
+        )
 
         for i in range(0, len(chunk_ids)):
             path = CHUNKS_DIR / f"{source}/{chunk_ids[i]}.json"
@@ -165,5 +182,12 @@ if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
 
-    start_chunker([DataSource.JENKINS_DOCS, DataSource.PLUGIN_DOCS, DataSource.DISCOURSE_TOPICS, DataSource.REDDIT_THREADS], OUTPUT_DIR)
- 
+    start_chunker(
+        [
+            DataSource.JENKINS_DOCS,
+            DataSource.PLUGIN_DOCS,
+            DataSource.DISCOURSE_TOPICS,
+            DataSource.REDDIT_THREADS,
+        ],
+        OUTPUT_DIR,
+    )

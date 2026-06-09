@@ -7,9 +7,7 @@ from .filter_functions import (
     remove_html_comments,
     remove_edge_navigation_blocks,
     get_visible_text_length,
-    strip_html_body_wrappers
+    strip_html_body_wrappers,
 )
 
-from .split_doc_types import(
-    split_doc_types
-)
+from .split_doc_types import split_doc_types
