@@ -1,10 +1,6 @@
-import os
 from ..tools.common import read_json_file, write_json_file
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "raw", "discourse_dump.json")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "discourse_topics.json")
-
+from pathlib import Path
+import os
 
 def process_topics(topics: list[dict]):
     """
@@ -58,18 +54,25 @@ def process_topics(topics: list[dict]):
     return topics_processed
 
 
-def start_discourse_topics_processor():
+def discourse_topics_processor(output_dir: Path):
     """Start Discourse topics processor."""
-    data = read_json_file(INPUT_PATH)
+    
+    INPUT_FILE_PATH = output_dir / "raw" / "discourse_topics.json"
+    OUTPUT_FILE_PATH = output_dir / "processed" / "discourse_topics.json"
+
+    data = read_json_file(INPUT_FILE_PATH)
     topics_processed = process_topics(data["topics"])
 
     result = {
-            "topics": topics_processed,
-            "length": len(topics_processed)
+        "topics": topics_processed,
+        "length": len(topics_processed)
     }
 
-    saved = write_json_file(OUTPUT_PATH, result)
+    saved = write_json_file(OUTPUT_FILE_PATH, result)
 
 
 if __name__ == "__main__":
-    start_discourse_topics_processor()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    discourse_topics_processor(OUTPUT_DIR)

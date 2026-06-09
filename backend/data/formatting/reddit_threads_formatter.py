@@ -6,12 +6,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime 
 from langchain_core.documents import Document
 from ..models import DataSource
+from pathlib import Path
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "reddit_threads.json")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "reddit_threads")
-DOCS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "reddit_threads")
-CODE_BLOCKS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "code_blocks")
 
 REDDIT_ID_TEMPLATE = "R_{}"
 REDDIT_CB_ID_TEMPLATE = "CB_{}_N_{}"
@@ -114,22 +110,29 @@ def process_threads(threads: list[dict]):
     return documents, code_blocks
 
 
-def start_reddit_formatter():
+def reddit_formatter(output_path: Path):
     """Start Reddit formatter."""
-    data = read_json_file(INPUT_PATH)
+    INPUT_FILE_PATH = output_path / "processed" / "reddit_threads.json"
+    DOCUMENTS_OUTPUT_DIR = output_path / "documents" / "reddit_threads"
+    CODE_BLOCKS_OUTPUT_DIR = output_path / "documents" / "code_blocks"
+
+    data = read_json_file(INPUT_FILE_PATH)
     if not data:
         return
 
-    documents, code_blocks = process_threads(data["posts"])
+    documents, code_blocks = process_threads(data["threads"])
 
     for doc in documents: 
-        write_json_file(f"{DOCS_OUTPUT_PATH}/{doc.id}.json", doc.model_dump())
+        write_json_file(f"{DOCUMENTS_OUTPUT_DIR}/{doc.id}.json", doc.model_dump())
 
     for cb in code_blocks: 
-        write_json_file(f"{CODE_BLOCKS_OUTPUT_PATH}/{cb.id}.json", cb.model_dump())
+        write_json_file(f"{CODE_BLOCKS_OUTPUT_DIR}/{cb.id}.json", cb.model_dump())
 
 
 
 
 if __name__ == "__main__":
-    start_reddit_formatter()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    reddit_formatter(OUTPUT_DIR)

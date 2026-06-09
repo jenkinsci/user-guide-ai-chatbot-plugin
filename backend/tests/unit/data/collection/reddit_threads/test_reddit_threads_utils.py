@@ -93,7 +93,7 @@ def test_parse_reddit_datetime_none_element():
     assert parse_reddit_datetime(None) is None
 
 
-AUTHOR = Author(username="user1", id="u_001")
+AUTHOR = Author(username="user1")
  
 
 def make_comment(cid: str, parent_id: Optional[str] = None, content: str = "text") -> Comment:

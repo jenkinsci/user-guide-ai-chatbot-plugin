@@ -7,11 +7,8 @@ from .preprocessing_utils import (
     strip_html_body_wrappers
 )
 from data.tools.common import read_json_file, write_json_file
+from pathlib import Path
 
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "raw", "plugin_docs.json")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "plugin_docs.json")
 
 MIN_VISIBLE_TEXT_LENGTH = 60
 
@@ -55,21 +52,26 @@ def process_plugin_docs(plugin_docs):
 
     return processed_plugin_docs
 
-def start_plugin_docs_processor():
+def plugin_docs_processor(output_dir: Path):
     """Start Plugin docs processor."""
-    plugin_data = {}
 
-    plugin_data = read_json_file(INPUT_PATH)
+    INPUT_FILE_PATH = output_dir / "raw" / "plugin_docs.json"
+    OUTPUT_FILE_PATH = output_dir / "processed" / "plugin_docs.json"
+
+    plugin_data = read_json_file(INPUT_FILE_PATH)
 
     print(f"Handling {len(plugin_data)} plugin docs.")
 
     processed_plugin_docs = process_plugin_docs(plugin_data)
 
-    saved = write_json_file(OUTPUT_PATH, processed_plugin_docs)
+    saved = write_json_file(OUTPUT_FILE_PATH, processed_plugin_docs)
 
     if saved:
-        print(f"Saved processed plugins to {OUTPUT_PATH}.")
+        print(f"Saved processed plugins to {OUTPUT_FILE_PATH}.")
     
 
 if __name__ == "__main__":
-    start_plugin_docs_processor()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    plugin_docs_processor(OUTPUT_DIR)

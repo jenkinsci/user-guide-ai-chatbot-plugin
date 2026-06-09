@@ -1,4 +1,4 @@
-from .plugin_names_scraper import start_plugin_names_scraper
+from .plugin_names_scraper import plugin_names_scraper
 import os
 from bs4 import BeautifulSoup
 import requests
@@ -66,32 +66,34 @@ def collect_plugin_docs(plugin_names) -> dict[str, str]:
     return result
 
 
-def start_plugin_docs_scraper():
+def plugin_docs_scraper(output_dir: Path):
     """
     Start the Plugin docs scraper.
     """
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    PLUGIN_NAMES_LIST_PATH = os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "plugin_names.json")
-    OUTPUT_PATH = Path(os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "plugin_docs.json"))
+    PLUGIN_NAMES_LIST_FILE_PATH = output_dir / "raw" / "plugin_names.json"
+    OUTPUT_FILE_PATH = output_dir / "raw" /  "plugin_docs.json"
 
     # Fetch plugin names list and stores it
-    start_plugin_names_scraper()
+    plugin_names_scraper(output_dir)
 
     plugin_names_list = []
 
     # Get plugin names list content
-    plugin_names_list = read_json_file(PLUGIN_NAMES_LIST_PATH)
+    plugin_names_list = read_json_file(PLUGIN_NAMES_LIST_FILE_PATH)
 
     plugin_docs = collect_plugin_docs(plugin_names_list)
 
     print(f"Total plugins docs found: {len(plugin_docs)}")
 
     # Store in a json file 
-    write_json_file(OUTPUT_PATH, 
+    write_json_file(OUTPUT_FILE_PATH, 
                 plugin_docs, 
                 indent=4,                     
                 ensure_ascii=False)
 
 
 if __name__ == "__main__":
-    start_plugin_docs_scraper()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "..", "output")
+
+    plugin_docs_scraper(OUTPUT_DIR)

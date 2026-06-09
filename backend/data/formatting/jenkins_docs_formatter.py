@@ -10,11 +10,9 @@ from .formatting_utils import (
 from ..tools.common import read_json_file, write_json_file
 from langchain_core.documents import Document
 from ..models import DataSource
+from pathlib import Path
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "jenkins_docs.json")
-DOCS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "jenkins_docs")
-CODE_BLOCKS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "code_blocks")
+
 
 PLACEHOLDER_TEMPLATE = "[[CODE_BLOCK_{}]]"
 
@@ -114,21 +112,28 @@ def create_documents(data):
 
     return documents, code_blocks
 
-def start_jenkins_docs_formatter():
+def jenkins_docs_formatter(output_dir: Path):
     """Start Jenkins Docs formatter."""
-    data = read_json_file(INPUT_PATH)
+    INPUT_FILE_PATH = output_dir / "processed" / "jenkins_docs.json"
+    DOCUMENTS_OUTPUT_DIR = output_dir / "documents" / "jenkins_docs"
+    CODE_BLOCKS_OUTPUT_DIR = output_dir / "documents" / "code_blocks"
+
+    data = read_json_file(INPUT_FILE_PATH)
     if not data:
         return
     
     documents, code_blocks = create_documents(data)
 
     for doc in documents: 
-        write_json_file(f"{DOCS_OUTPUT_PATH}/{doc.id}.json", doc.model_dump())
+        write_json_file(f"{DOCUMENTS_OUTPUT_DIR}/{doc.id}.json", doc.model_dump())
 
     for cb in code_blocks: 
-        write_json_file(f"{CODE_BLOCKS_OUTPUT_PATH}/{cb.id}.json", cb.model_dump())
+        write_json_file(f"{CODE_BLOCKS_OUTPUT_DIR}/{cb.id}.json", cb.model_dump())
 
 
 
 if __name__ == "__main__":
-    start_jenkins_docs_formatter()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    jenkins_docs_formatter(OUTPUT_DIR)

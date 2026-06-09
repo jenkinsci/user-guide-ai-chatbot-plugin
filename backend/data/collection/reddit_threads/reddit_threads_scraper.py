@@ -6,6 +6,7 @@ from .models import ThreadPreview, Author, Comment, ThreadDetails, Section
 from .reddit_threads_utils import get_subreddit_page_url, export_threads_to_json, extract_integer, parse_reddit_datetime, print_thread_details
 from ..collection_utils import retry_until_success, sleep
 import os
+from pathlib import Path
 
 
 HEADERS =  {
@@ -132,7 +133,6 @@ def scrape_thread_details(thread_id: str) -> Optional[ThreadDetails]:
         # Content (Self-text)
         body_element = main_post_node.find('div', class_='usertext-body')
         content = str(body_element) if body_element else ""
-        print("POST: "+content)
 
         # Author and Subreddit
         author_element = main_post_node.find('a', class_='author')
@@ -294,21 +294,22 @@ def scrape_all_threads_details(thread_ids: Set[str]) -> List[ThreadDetails]:
     return threads
 
 
-def start_reddit_threads_scraper():
+def reddit_threads_scraper(output_dir: Path):
     """
     Start the Reddit scraper.
     """
-
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "reddit_threads.json")
+    OUTPUT_FILE_PATH = output_dir / "raw" / "reddit_threads.json"
     
     SUBREDDIT_NAME = "jenkinsci"
 
     unique_thread_ids = scrape_all_subreddit_sections(SUBREDDIT_NAME)
     thread_list = scrape_all_threads_details(unique_thread_ids)
 
-    export_threads_to_json(thread_list, OUTPUT_PATH)
+    export_threads_to_json(thread_list, OUTPUT_FILE_PATH)
 
             
 if __name__ == "__main__":
-    start_reddit_threads_scraper()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "..", "output")
+
+    reddit_threads_scraper(OUTPUT_DIR)

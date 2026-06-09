@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from typing import List
 from ...tools.common import write_json_file
-
+from pathlib import Path
 
 def fetch_plugin_names() -> List[str]:
     """
@@ -37,18 +37,20 @@ def fetch_plugin_names() -> List[str]:
 
 
 
-def start_plugin_names_scraper():
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "plugin_names.json")
+def plugin_names_scraper(output_dir: Path):
+    OUTPUT_FILE_PATH = output_dir / "raw" / "plugin_names.json"
 
     plugins = fetch_plugin_names()
 
     plugin_names = [plugin_name.split(".")[0] for plugin_name in plugins]
 
-    write_json_file(OUTPUT_PATH, plugin_names, indent=2, ensure_ascii=False)
-    print(f"Saved plugin list to {OUTPUT_PATH}")
+    write_json_file(OUTPUT_FILE_PATH, plugin_names, indent=2, ensure_ascii=False)
+    print(f"Saved plugin list to {OUTPUT_FILE_PATH}")
 
 
 
 if __name__ == "__main__":
-    start_plugin_names_scraper()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "..", "output")
+
+    plugin_names_scraper(OUTPUT_DIR)

@@ -1,10 +1,7 @@
-import os
 from ..tools.common import read_json_file, write_json_file
-from typing import List
+from pathlib import Path
+import os
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "raw", "reddit_dump.json")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "reddit_threads.json")
 
 def process_threads(posts: list[dict]):
     """
@@ -40,18 +37,24 @@ def process_threads(posts: list[dict]):
     return conversations    
 
 
-def start_reddit_threads_processor():
+def reddit_threads_processor(output_dir: Path):
     """Start Reddit threads processor."""
-    data = read_json_file(INPUT_PATH)
+    INPUT_FILE_PATH = output_dir / "raw" / "reddit_threads.json"
+    OUTPUT_FILE_PATH = output_dir /"processed" / "reddit_threads.json"
 
-    filtered_data = process_threads(data["posts"])
+    data = read_json_file(INPUT_FILE_PATH)
+
+    filtered_data = process_threads(data["threads"])
 
     result = {
-        "posts": filtered_data,
+        "threads": filtered_data,
         "length": len(filtered_data)
     }
     
-    saved = write_json_file(OUTPUT_PATH, result)
+    saved = write_json_file(OUTPUT_FILE_PATH, result)
 
 if __name__ == "__main__":
-    start_reddit_threads_processor()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    reddit_threads_processor(OUTPUT_DIR)

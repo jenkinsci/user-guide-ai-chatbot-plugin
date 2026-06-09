@@ -6,6 +6,7 @@ from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from ...tools.common import write_json_file
 from .jenkins_docs_utils import extract_page_content_container, is_valid_url, normalize_url
+from pathlib import Path
 
 
 BASE_URL = "https://www.jenkins.io/doc/"
@@ -128,12 +129,12 @@ def crawl(start_url):
             continue  
         
 
-def start_jenkins_docs_scraper():
+def jenkins_docs_scraper(output_dir: Path):
     """
     Start the Jenkins docs scraper.
     """
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "jenkins_docs.json")
+    
+    OUTPUT_FILE_PATH =  output_dir / "raw" / "jenkins_docs.json"
 
     print("JENKINS DOCS SCRAPER")
     crawl(BASE_URL)
@@ -143,8 +144,11 @@ def start_jenkins_docs_scraper():
     print("Crawling ended")
 
     print("Saving results in json")
-    write_json_file(OUTPUT_PATH, data, indent=2, ensure_ascii=False)
+    write_json_file(OUTPUT_FILE_PATH, data, indent=2, ensure_ascii=False)
  
 
 if __name__ == "__main__":
-    start_jenkins_docs_scraper()    
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "..", "output")
+
+    jenkins_docs_scraper(OUTPUT_DIR)    

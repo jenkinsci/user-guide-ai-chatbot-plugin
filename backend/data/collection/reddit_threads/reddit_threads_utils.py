@@ -5,6 +5,7 @@ from .models import ThreadDetails, Section
 from typing import List, Optional, Any
 import re
 from ...tools.common import datetime_serializer, write_json_file
+from pathlib import Path
 
 
 def print_thread_details(thread: ThreadDetails):
@@ -125,7 +126,7 @@ def build_thread_trees(thread_list: List[ThreadDetails]) -> dict[str, Any]:
     }    
 
 
-def export_threads_to_json(thread_list: List[ThreadDetails], file_path: str):
+def export_threads_to_json(thread_list: List[ThreadDetails], file_path: Path | str):
     """
     Takes a list of ThreadDetails dataclasses, nests the comments hierarchically,
     and saves them to a formatted JSON file.

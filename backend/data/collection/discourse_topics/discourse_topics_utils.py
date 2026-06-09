@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from .models import Post, TopicDetails, SearchFilters
 from ...tools.common import write_json_file
-
+from pathlib import Path
 
 def print_topic_preview(topic_details: TopicDetails):
     first_post = topic_details.posts[0]
@@ -93,7 +93,7 @@ def build_topic_tree(raw_posts_data: List[Dict[str, Any]]) -> List[Post]:
     return root_posts
 
 
-def export_topics_to_json(topic_list: List[TopicDetails], file_path: str):
+def export_topics_to_json(topic_list: List[TopicDetails], file_path: Path | str):
     """
     Store list of TopicDetail objs in a json file
 

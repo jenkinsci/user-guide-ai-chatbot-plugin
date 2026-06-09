@@ -1,6 +1,7 @@
 from data.collection.collectors import start_collectors
 from .preprocessing.processors import start_processors
 from .formatting.formatters import start_formatters
+from .chunking.chunker import start_chunker 
 from .embedding.embedder import start_embedder
 
 import os
@@ -90,39 +91,41 @@ def collector_menu() -> list[DataSource]:
     return list(selected_sources)
 
 
-def start_data_pipeline(selected_sources: list[DataSource]):
+def start_data_pipeline(selected_sources: list[DataSource], script_dir: Path):
     if not selected_sources: 
         print("---- NO DATA SOURCE SELECTED ----")
         return
+    
+    output_dir = script_dir / "output"
+
+    phase_fun = {
+        DataPhase.COLLECTION: start_collectors,
+        DataPhase.PREPROCESSING: start_processors,
+        DataPhase.FORMATTING: start_formatters,
+        DataPhase.CHUNKING: start_chunker,
+        DataPhase.EMBEDDING: start_embedder,
+    }
 
     manager_logs = {}
     manager_logs["start_date"] = datetime.now()
     manager_logs["phases"] = []
     manager_logs["selected_sources"] = [source.value for source in selected_sources]
-    PHASES = [DataPhase.COLLECTION, DataPhase.PREPROCESSING, DataPhase.FORMATTING, DataPhase.EMBEDDING]
 
-    for phase in PHASES:
+    for phase, fun in phase_fun.items():
         phase_obj = {}
 
         phase_obj["name"] = phase.value
         phase_obj["start_date"] = datetime.now()
 
-        if phase == DataPhase.COLLECTION:
-            start_collectors(selected_sources)
-        elif phase == DataPhase.PREPROCESSING:
-            start_processors(selected_sources)
-        elif phase == DataPhase.FORMATTING:
-            start_formatters(selected_sources)
-        elif phase == DataPhase.EMBEDDING:
-            start_embedder(selected_sources)
+        # Execute the specific phase function
+        fun(selected_sources, output_dir)
 
         phase_obj["end_date"] = datetime.now()
         manager_logs["phases"].append(phase_obj)
 
     manager_logs['end_date'] = datetime.now()
 
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    LOGS_FILE_PATH = Path(os.path.join(SCRIPT_DIR, "logs", f"logs_{manager_logs['start_date'].strftime("%Y-%m-%d_%H-%M-%S")}.json"))
+    LOGS_FILE_PATH = script_dir / "logs" / f"logs_{manager_logs['start_date'].strftime("%Y-%m-%d_%H-%M-%S")}.json"
 
     write_json_file(LOGS_FILE_PATH, 
                     manager_logs, 
@@ -132,8 +135,10 @@ def start_data_pipeline(selected_sources: list[DataSource]):
 
 
 def start_manager():
+    SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+
     selected_sources = collector_menu()
-    start_data_pipeline(selected_sources)
+    start_data_pipeline(selected_sources, SCRIPT_DIR)
 
 
 if __name__ == "__main__":

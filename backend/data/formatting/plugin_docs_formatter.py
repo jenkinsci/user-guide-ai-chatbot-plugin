@@ -10,13 +10,8 @@ from ..tools.common import read_json_file, write_json_file
 from datetime import datetime
 from langchain_core.documents import Document
 from ..models import DataSource
+from pathlib import Path
 
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "plugin_docs.json")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "plugin_docs")
-DOCS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "plugin_docs")
-CODE_BLOCKS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "code_blocks")
 
 PLUGIN_DOCS_ID_TEMPLATE = "P_{}"
 PLUGIN_DOCS_CB_ID_TEMPLATE = "CB_{}_N_{}"
@@ -114,20 +109,28 @@ def create_documents(plugin_docs):
     return documents, code_blocks    
 
 
-def start_plugin_docs_formatter():
+def plugin_docs_formatter(output_dir: Path):
     """Start Plugin Docs formatter."""
-    plugin_docs = read_json_file(INPUT_PATH)
+
+    INPUT_FILE_PATH = output_dir / "processed" / "plugin_docs.json"
+    DOCUMENTS_OUTPUT_DIR = output_dir / "documents" / "plugin_docs"
+    CODE_BLOCKS_OUTPUT_DIR = output_dir / "documents" / "code_blocks"
+
+    plugin_docs = read_json_file(INPUT_FILE_PATH)
     if not plugin_docs:
         return
 
     documents, code_blocks = create_documents(plugin_docs)
 
     for doc in documents: 
-        write_json_file(f"{DOCS_OUTPUT_PATH}/{doc.id}.json", doc.model_dump())
+        write_json_file(f"{DOCUMENTS_OUTPUT_DIR}/{doc.id}.json", doc.model_dump())
 
     for cb in code_blocks: 
-        write_json_file(f"{CODE_BLOCKS_OUTPUT_PATH}/{cb.id}.json", cb.model_dump())
+        write_json_file(f"{CODE_BLOCKS_OUTPUT_DIR}/{cb.id}.json", cb.model_dump())
 
 
 if __name__ == "__main__":
-    start_plugin_docs_formatter()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    plugin_docs_formatter(OUTPUT_DIR)

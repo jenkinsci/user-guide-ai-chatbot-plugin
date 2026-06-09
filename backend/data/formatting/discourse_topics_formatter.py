@@ -6,11 +6,9 @@ from langchain_core.documents import Document
 from bs4 import BeautifulSoup
 from datetime import datetime 
 from ..models import DataSource
+from pathlib import Path
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "discourse_topics.json")
-DOCS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "discourse_topics")
-CODE_BLOCKS_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "documents", "code_blocks")
+
 
 PLACEHOLDER_TEMPLATE = "[[CODE_BLOCK_{}]]"
 
@@ -115,21 +113,27 @@ def process_topics(topics: list[dict]):
     return documents, code_blocks
 
 
-def start_discourse_formatter():
+def discourse_formatter(output_dir: Path):
     """Start Discourse formatter."""
-    data = read_json_file(INPUT_PATH)
+
+    INPUT_FILE_PATH = output_dir / "processed" / "discourse_topics.json"
+    DOCUMENTS_OUTPUT_DIR = output_dir / "documents" / "discourse_topics"
+    CODE_BLOCKS_OUTPUT_DIR = output_dir / "documents" / "code_blocks" 
+
+    data = read_json_file(INPUT_FILE_PATH)
     if not data:
         return
 
     documents, code_blocks = process_topics(data["topics"])
 
     for doc in documents: 
-        write_json_file(f"{DOCS_OUTPUT_PATH}/{doc.id}.json", doc.model_dump())
+        write_json_file(f"{DOCUMENTS_OUTPUT_DIR}/{doc.id}.json", doc.model_dump())
 
     for cb in code_blocks: 
-        write_json_file(f"{CODE_BLOCKS_OUTPUT_PATH}/{cb.id}.json", cb.model_dump())
-
+        write_json_file(f"{CODE_BLOCKS_OUTPUT_DIR}/{cb.id}.json", cb.model_dump())
 
 
 if __name__ == "__main__":
-    start_discourse_formatter()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+    discourse_formatter(OUTPUT_DIR)

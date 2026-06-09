@@ -1,16 +1,15 @@
-import re
 import pytest
 from langchain_core.documents import Document
-from data.embedding.embedding_utils import assign_code_blocks_to_chunks
+from data.chunking.chunking_utils import assign_code_blocks_to_chunks
 
 PATTERN = r"\[CODE_BLOCK_(\d+)\]"
  
 @pytest.fixture
 def code_blocks():
     return [
-        Document(page_content="print('hello')"),   # 0
-        Document(page_content="x = 42"),            # 1
-        Document(page_content="def foo(): pass"),   # 2
+        Document(page_content="print('hello')"),   
+        Document(page_content="x = 42"),
+        Document(page_content="def foo(): pass"),
     ]
  
  

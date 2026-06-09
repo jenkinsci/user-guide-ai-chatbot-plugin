@@ -5,6 +5,7 @@ from .models import TopicCollection, TopicDetails, SearchFilters, SolutionPost
 import time
 from ..collection_utils import retry_until_success
 import os
+from pathlib import Path
 
 
 DISCOURSE_URL = "https://community.jenkins.io"
@@ -171,12 +172,12 @@ def fetch_topic_details(
         raise Exception()
         
 
-def start_discourse_topics_retriever():
+def discourse_topics_retriever(output_dir: Path):
     """
         Start Discourse extractor.
     """
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "..", "output", "raw", "discourse_topics.json")
+
+    OUTPUT_FILE_PATH = output_dir / "raw" / "discourse_topics.json"
 
     filters_list = [SearchFilters("using-jenkins", "support", "")]
     all_topics_collections: List[TopicCollection] = []
@@ -224,8 +225,11 @@ def start_discourse_topics_retriever():
             n_topics_fetched += 1
             time.sleep(0.2)
 
-    export_topics_to_json(topics_detail_list, OUTPUT_PATH)
+    export_topics_to_json(topics_detail_list, OUTPUT_FILE_PATH)
 
 
 if __name__ == "__main__":
-    start_discourse_topics_retriever()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "..", "output")
+
+    discourse_topics_retriever(OUTPUT_DIR)

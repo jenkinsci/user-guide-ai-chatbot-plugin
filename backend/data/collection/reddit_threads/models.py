@@ -18,7 +18,6 @@ class ThreadPreview:
 @dataclass
 class Author:
     username: str
-    id: Optional[str] = None  
 
 @dataclass
 class Comment:

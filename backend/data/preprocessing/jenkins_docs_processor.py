@@ -10,11 +10,7 @@ from .preprocessing_utils import (
     split_doc_types
 )
 from ..tools.common import read_json_file, write_json_file, convert_date_str_in_iso
-
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_DOCS_PATH = os.path.join(SCRIPT_DIR, "..", "output", "raw", "jenkins_docs.json")
-OUTPUT_PATH = os.path.join(SCRIPT_DIR, "..", "output", "processed", "jenkins_docs.json")
+from pathlib import Path
 
 
 def filter_content(urls: list[str], data, is_developer_content):
@@ -89,10 +85,13 @@ def get_config(is_developer_content):
     }
 
 
-def start_jenkins_docs_processor():
+def jenkins_docs_processor(output_dir: Path):
     """Start Jenkins Docs processor."""
+
+    INPUT_FILE_PATH = output_dir / "raw" / "jenkins_docs.json"
+    OUTPUT_FILE_PATH = output_dir / "processed" / "jenkins_docs.json"
     
-    data = read_json_file(INPUT_DOCS_PATH)
+    data = read_json_file(INPUT_FILE_PATH)
 
     developer_urls, non_developer_urls = split_doc_types(data["pages"])
 
@@ -108,8 +107,11 @@ def start_jenkins_docs_processor():
     output["pages"]["developer"] = developer_content_filtered
     output["pages"]["non_developer"] = non_developer_content_filtered
 
-    write_json_file(OUTPUT_PATH, output, indent=4)
+    write_json_file(OUTPUT_FILE_PATH, output, indent=4)
 
 
 if __name__ == "__main__":
-    start_jenkins_docs_processor()
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
+
+    jenkins_docs_processor(OUTPUT_DIR)

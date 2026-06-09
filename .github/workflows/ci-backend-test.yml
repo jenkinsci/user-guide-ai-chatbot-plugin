@@ -32,6 +32,12 @@ jobs:
           PYTHONPATH: ${{github.workspace}}/backend
         run: |
           pytest tests/unit
+      - name: Run end-to-end tests
+        working-directory: backend
+        env:
+          PYTHONPATH: ${{github.workspace}}/backend
+        run: |
+          pytest tests/end-to-end
       - name: Run integration tests
         working-directory: backend
         env:

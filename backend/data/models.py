@@ -10,4 +10,5 @@ class DataPhase(Enum):
     COLLECTION = "collection"
     PREPROCESSING = "preprocessing"
     FORMATTING = "formatting"
+    CHUNKING = "chunking"
     EMBEDDING = "embedding"
