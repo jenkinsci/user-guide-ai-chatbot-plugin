@@ -31,18 +31,14 @@ def embedder(sources: list[DataSource], output_dir: Path):
             data = read_json_file(file_path)
             chunk = Document(page_content=data["page_content"], metadata=data["metadata"], id=data["id"])
             chunks.append(chunk)
-            if chunk.id:
-                chunk_ids.append(chunk.id)
-            else:
-                print("Missing ID for chunk: ", file_path)
-                chunk_ids.append("")
+            chunk_ids.append(chunk.id) # type: ignore
+
 
         chunks_length = len(chunk_ids)
         print(f"Embedding {source}: {chunks_length} chunks")
 
         batch_size = 5000 
         for i in range(0, len(chunks), batch_size):
-            print(f"vectorized and stored {i} chunks from {source}")
             batch = chunks[i : i + batch_size]
             batch_ids = chunk_ids[i : i + batch_size]
 
@@ -51,6 +47,8 @@ def embedder(sources: list[DataSource], output_dir: Path):
 
             # Add the new ones
             ids = vector_store.add_documents(batch, ids=batch_ids)
+            print(f"Stored {i + batch_size} chunks from {source}")
+
 
     print("CHUNKS EMBEDDED AND STORED: ", vector_store._collection.count())
 
