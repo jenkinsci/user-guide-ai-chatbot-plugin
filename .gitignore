@@ -7,7 +7,7 @@ __pycache__
 output
 logs
 test-reports
-backend/chroma-data
+chroma-data
 
 # frontend folder -> frontend/.gitignore
 
