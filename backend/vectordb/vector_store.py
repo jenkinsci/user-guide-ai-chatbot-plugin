@@ -9,11 +9,12 @@ from functools import lru_cache
 
 load_dotenv()
 
+
 @lru_cache(maxsize=1)
 def get_vector_store():
     """
-    Returns a QdrantVectorStore instance, which is cached after the first function execution. 
-    Uses a Hybrid retriever with a Dense and Sparse Embedding. 
+    Returns a QdrantVectorStore instance, which is cached after the first function execution.
+    Uses a Hybrid retriever with a Dense and Sparse Embedding.
     """
     QDRANT_HOST = get_env("QDRANT_HOST")
     QDRANT_PORT = int(get_env("QDRANT_PORT"))
@@ -23,16 +24,16 @@ def get_vector_store():
     QDRANT_SECRET_KEY = get_env("QDRANT_SECRET_KEY")
 
     HUGGING_FACE_EMBEDDING_NAME = get_env("HUGGING_FACE_EMBEDDING_NAME")
-    EMBEDDING_SIZE =  int(get_env("EMBEDDING_SIZE"))
+    EMBEDDING_SIZE = int(get_env("EMBEDDING_SIZE"))
     FAST_EMBED_SPARSE_MODEL_NAME = get_env("FAST_EMBED_SPARSE_MODEL_NAME")
 
     admin_token = None
-    if QDRANT_SECRET_KEY: 
+    if QDRANT_SECRET_KEY:
         admin_token = generate_admin_token(QDRANT_SECRET_KEY)
 
     qdrant_client = QdrantClient(url=QDRANT_URL, https=QDRANT_SSL, api_key=admin_token)
 
-    dense_embeddings = HuggingFaceEmbeddings(model_name=HUGGING_FACE_EMBEDDING_NAME)  
+    dense_embeddings = HuggingFaceEmbeddings(model_name=HUGGING_FACE_EMBEDDING_NAME)
     sparse_embeddings = FastEmbedSparse(model_name=FAST_EMBED_SPARSE_MODEL_NAME)
 
     if not qdrant_client.collection_exists(QDRANT_COLLECTION_NAME):

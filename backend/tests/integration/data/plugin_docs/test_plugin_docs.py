@@ -4,7 +4,7 @@ from data.chunking.chunker import start_chunker
 from data.embedding.embedder import embedder
 from data.models import DataSource
 from pathlib import Path
-from langchain_chroma import Chroma
+from langchain_qdrant import QdrantVectorStore
 from tests.mock_data.mock_collector_output_data import (
     COLLECTOR_OUTPUT_PLUGIN_DOCS,
 )
@@ -12,7 +12,7 @@ from tests.integration.data.utils import ephemeral_vector_db
 from data.tools.common import write_json_file
 
 
-def test_plugin_docs(tmp_path: Path, ephemeral_vector_db: Chroma):
+def test_plugin_docs(tmp_path: Path, ephemeral_vector_db: QdrantVectorStore):
     SOURCE = DataSource.PLUGIN_DOCS
 
     # Setup (MOCKED Collection Phase)

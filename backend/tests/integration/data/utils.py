@@ -8,6 +8,7 @@ COLLECTION_NAME = "test_collection"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 VECTOR_SIZE = 384
 
+
 @pytest.fixture(scope="module")
 def ephemeral_vector_db():
     client = QdrantClient(":memory:")

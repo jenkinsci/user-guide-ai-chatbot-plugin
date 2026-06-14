@@ -86,7 +86,7 @@ def process_doc(
             **doc.metadata,
             "chunk_index": current_index,
             "total_chunks": total_chunks,
-            "chunk_id": chunk_id
+            "chunk_id": chunk_id,
         }
 
         # Convert id to UUID (Deterministic). Necessary for Qdrant
