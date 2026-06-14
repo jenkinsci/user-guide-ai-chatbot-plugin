@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import auth
-from .verify_env import verify_env_variables
+from .manage_env import verify_env_variables
 from database import engine
 import models
 

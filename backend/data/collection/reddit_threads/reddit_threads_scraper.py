@@ -61,7 +61,7 @@ def scrape_subreddit_threads(
             # Extract specific data from each container
             for single_thread in thread_elements:
                 thread_title_element = single_thread.find("a", class_="title")
-                thread_id = str(single_thread["id"])
+                thread_id = str(single_thread["id"].split("_", 1)[1])
 
                 if thread_title_element:
                     extracted_title = thread_title_element.text

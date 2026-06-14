@@ -2,9 +2,33 @@ import os
 import sys
 from dotenv import load_dotenv
 
+OPTIONAL_ENV_VARS = ["QDRANT_SECRET_KEY"]
+
 REQUIRED_ENV_VARS = [
-    "CHROMADB_URL",
+    "QDRANT_HOST",
+    "QDRANT_PORT",
+    "QDRANT_SSL",
+    "QDRANT_COLLECTION_NAME",
+    "DATABASE_URL",
+    "ALLOW_ORIGINS",
+    "HUGGING_FACE_EMBEDDING_NAME",
 ]
+
+
+def get_env(key: str, ok: bool = True) -> str:
+    clean_key = key.strip()
+    if not clean_key:
+        return ""
+
+    value = os.getenv(clean_key)
+
+    if not value:
+        if ok:
+            return ""
+        else:
+            raise Exception("Env value is empty")
+
+    return value
 
 
 def verify_env_variables():
