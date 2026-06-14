@@ -7,8 +7,8 @@ from qdrant_client.http.models import models
 def hybrid_retriever(query: str, metadata: dict = {}, k: int = 2) -> list[Document]:
     """
     Make a query using Qdrant Hybrid Retriever
-
-    Args:
+    
+    Args: 
         query (str)
         metadata (dict): Filter using metadata
         k (int): Get top k results
@@ -18,16 +18,13 @@ def hybrid_retriever(query: str, metadata: dict = {}, k: int = 2) -> list[Docume
     """
     fields = []
     for key, value in metadata.items():
-        fields.append(
-            models.FieldCondition(
-                key=f"metadata.{key}", match=models.MatchValue(value=value)
-            )
-        )
+        fields.append(models.FieldCondition(
+                key=f"metadata.{key}",
+                match=models.MatchValue(value=value)
+        ))
 
     metadata_filter = models.Filter(must=fields)
-    return get_vector_store().similarity_search(
-        query=query, k=k, filter=metadata_filter
-    )
+    return get_vector_store().similarity_search(query=query, k=k, filter=metadata_filter)
 
 
 if __name__ == "__main__":

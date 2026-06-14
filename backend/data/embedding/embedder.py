@@ -8,9 +8,7 @@ from vectordb.vector_store import get_vector_store
 from dotenv import load_dotenv
 
 
-def embedder(
-    sources: list[DataSource], output_dir: Path, vector_store: QdrantVectorStore
-):
+def embedder(sources: list[DataSource], output_dir: Path, vector_store: QdrantVectorStore):
     """Start embedder."""
     CHUNKS_DIR = output_dir / "chunks"
 
@@ -26,7 +24,9 @@ def embedder(
 
             id = data["id"]
             chunk = Document(
-                page_content=data["page_content"], metadata=data["metadata"], id=id
+                page_content=data["page_content"],
+                metadata=data["metadata"],
+                id=id
             )
             chunks.append(chunk)
             chunk_ids.append(id)  # type: ignore
