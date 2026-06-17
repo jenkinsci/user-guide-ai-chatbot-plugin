@@ -100,6 +100,8 @@ def scrape_subreddit_threads(
 def scrape_thread_details(thread_id: str) -> Optional[ThreadDetails]:
     """
     Scrape the details of specific thread.
+    If exceptions occur, retry execution up to 3 times.
+    Wait 3.0 seconds after the exception occurs.
 
     Args:
         thread_id (str)

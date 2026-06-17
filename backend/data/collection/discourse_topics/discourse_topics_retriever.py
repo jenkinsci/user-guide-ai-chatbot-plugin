@@ -20,7 +20,9 @@ def fetch_topic_previews(
     page: int, base_url: str, search_filters: SearchFilters
 ) -> List[Dict]:
     """
-    Fetch a list of 30 topic summaries
+    Fetch a list of 30 topic summaries. 
+    If exceptions occur, retry execution up to 3 times.
+    Wait 3.0 seconds after the exception occurs.
 
     Args:
         page (int): Number of the page to retrieve.
@@ -65,7 +67,8 @@ def fetch_topic_collection(
     base_url: str, search_filters: SearchFilters
 ) -> TopicCollection:
     """
-    Fetch an entire topic collection
+    Fetch an entire topic collection.
+
 
     Args:
         base_url (str): Discourse base url.
@@ -115,7 +118,9 @@ def fetch_topic_details(
     topic_id: int,
 ) -> Optional[TopicDetails]:
     """
-    Fetch the details of a specific topic
+    Fetch the details of a specific topic.
+    If exceptions occur, retry execution up to 3 times.
+    Wait 3.0 seconds after the exception occurs.
 
     Args:
         base_url (str): Discourse base url.

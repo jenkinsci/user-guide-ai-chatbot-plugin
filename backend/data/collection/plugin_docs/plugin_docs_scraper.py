@@ -13,6 +13,8 @@ from .plugin_docs_utils import get_jenkins_version_req_and_release_date, get_ver
 def fetch_plugin_details(plugin_name: str) -> Optional[dict[str, str]]:
     """
     Extract plugin details including docs content, version and jenkins version required.
+    If exceptions occur, retry execution up to 3 times.
+    Wait 3.0 seconds after the exception occurs.
 
     Args:
         plugin_name (str): The name of the plugin.
