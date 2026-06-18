@@ -35,7 +35,7 @@ def install():
 
     if IS_WINDOWS:
         file_name = "requirements-windows.txt"
-        
+
     req = SCRIPT_DIR / file_name
 
     if req.exists():
@@ -104,7 +104,14 @@ def pre_commit():
     print("--> Running pre-commit checks...")
 
     print("    [1/3] Updating requirements.txt...")
-    req = SCRIPT_DIR / "requirements.txt"
+
+    file_name = "requirements.txt"
+
+    if IS_WINDOWS:
+        file_name = "requirements-windows.txt"
+
+    req = SCRIPT_DIR / file_name
+
     result = subprocess.run(
         [str(PYTHON), "-m", "pip", "freeze"],
         check=True,
