@@ -1,5 +1,17 @@
 target
 
+# backend folder
+.env
+.venv
+__pycache__
+output
+logs
+test-reports
+chroma-data
+qdrant_data
+
+# frontend folder -> frontend/.gitignore
+
 # mvn hpi:run
 work
 
