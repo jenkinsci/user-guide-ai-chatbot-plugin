@@ -103,12 +103,12 @@ def format():
 def pre_commit():
     print("--> Running pre-commit checks...")
 
-    print("    [1/3] Updating requirements.txt...")
-
     file_name = "requirements.txt"
 
     if IS_WINDOWS:
         file_name = "requirements-windows.txt"
+
+    print(f"    [1/3] Updating {file_name}...")
 
     req = SCRIPT_DIR / file_name
 
