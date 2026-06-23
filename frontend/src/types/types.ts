@@ -6,7 +6,7 @@ export interface ChatMessage {
   updatedAt: string | null;
 }
 
-export interface ChatSession {
+export interface Chat {
   id: string;
   title: string;
   updatedAt: string;

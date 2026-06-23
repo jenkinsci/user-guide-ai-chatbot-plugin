@@ -1,27 +1,21 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, AwareDatetime
-from typing import List, Optional
-from datetime import datetime, date
-import models
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 # ==========================================
-# 0. SHARED CONFIGURATION
+# CHAT SCHEMAS
 # ==========================================
 
+# Data required to create a new chat
+class ChatCreateRequest(BaseModel):
+    title: str
 
-class BaseConfigModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-
-class ResponseModel(BaseConfigModel):
-    """
-    Base model for all responses.
-    ConfigDict(from_attributes=True) is the Pydantic V2 equivalent of orm_mode=True.
-    It tells Pydantic to read data using the dot notation (e.g. object.field)
-    from SQLAlchemy database objects.
-    """
-
+# Data returned to the client
+class ChatResponse(BaseModel):
+    id: int
+    user_id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    
+    # Enables automatic mapping from SQLAlchemy ORM objects
     model_config = ConfigDict(from_attributes=True)
-
-
-class DeleteResponse(BaseModel):
-    n_entities_deleted: int

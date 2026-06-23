@@ -1,6 +1,6 @@
-import type { ChatMessage, ChatSession } from "../types/types";
+import type { ChatMessage, Chat } from "../types/types";
 
-export const DUMMY_SESSIONS: ChatSession[] = [
+export const DUMMY_SESSIONS: Chat[] = [
   {
     id: "session-1",
     title: "Build failed on main",

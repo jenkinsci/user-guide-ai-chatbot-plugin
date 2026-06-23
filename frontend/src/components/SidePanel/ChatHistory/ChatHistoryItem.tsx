@@ -1,11 +1,11 @@
 import { ListItemButton, ListItemText, Typography } from "@mui/material";
-import type { ChatSession } from "../../../types/types";
+import type { Chat } from "../../../types/types";
 import { ChatBubbleOutlineOutlined } from "@mui/icons-material";
 
 interface ChatHistoryItemProps {
-  session: ChatSession;
+  session: Chat;
   isActive: boolean;
-  onSelectSession: (session: ChatSession) => void;
+  onSelectSession: (session: Chat) => void;
   formattedDate: string;
 }
 

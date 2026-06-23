@@ -8,6 +8,7 @@ output
 logs
 test-reports
 qdrant_data
+postgres_data
 *.htpasswd
 
 # frontend build

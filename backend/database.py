@@ -1,29 +1,28 @@
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.orm import declarative_base
+from manage_env import get_env
 from dotenv import load_dotenv
 
-# Load variables from the root .env file
+load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+POSTGRES_URL = get_env("POSTGRES_URL")
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL is missing in the environment variables")
+db_engine = create_async_engine(POSTGRES_URL, echo=False)
 
-# Initialize the SQLAlchemy engine for PostgreSQL
-engine = create_engine(DATABASE_URL)
+AsyncSessionLocal = async_sessionmaker(
+    bind=db_engine, 
+    class_=AsyncSession, 
+    expire_on_commit=False
+)
 
-# Create a session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for the ORM models
 Base = declarative_base()
 
-
-# Dependency to yield database sessions for API routes
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_database_session():
+    """
+    Yields an active database session and ensures it is closed after the request.
+    """
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

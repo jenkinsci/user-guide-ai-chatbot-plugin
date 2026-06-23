@@ -1,13 +1,13 @@
 import { Box, Typography, List, Button, Divider } from "@mui/material";
-import type { ChatSession } from "../../../types/types";
+import type { Chat } from "../../../types/types";
 import { customScrollbar } from "../../../theme/scrollBarStyles";
 import ChatHistoryItem from "./ChatHistoryItem";
 
 interface ChatHistoryProps {
   open: boolean;
-  sessions: ChatSession[];
+  sessions: Chat[];
   activeSessionId?: string | null;
-  onSelectSession: (session: ChatSession) => void;
+  onSelectSession: (session: Chat) => void;
   onNewChat: () => void;
 }
 

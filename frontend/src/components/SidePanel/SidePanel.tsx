@@ -3,7 +3,7 @@ import { Box, Drawer } from "@mui/material";
 import ChatFooter from "./ChatFooter/ChatFooter";
 import Header from "./Header/Header";
 import { ChatPlaceholder } from "./ChatPlaceholder/ChatPlaceholder";
-import type { ChatMessage, ChatSession } from "../../types/types";
+import type { ChatMessage, Chat } from "../../types/types";
 import ChatContent from "./ChatContent/ChatContent";
 import ChatHistory from "./ChatHistory/ChatHistory";
 import { DUMMY_MESSAGES, DUMMY_SESSIONS } from "../../data/dummyData";
@@ -27,7 +27,7 @@ export default function SidePanel({
   const [inputValue, setInputValue] = useState<string>("");
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [sessions, setSessions] = useState<ChatSession[]>(DUMMY_SESSIONS);
+  const [sessions, setSessions] = useState<Chat[]>(DUMMY_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
   const [sessionMessages, setSessionMessages] =
@@ -44,7 +44,7 @@ export default function SidePanel({
 
     if (!sessionId) {
       sessionId = crypto.randomUUID();
-      const newSession: ChatSession = {
+      const newSession: Chat = {
         id: sessionId,
         title: text.slice(0, 40),
         updatedAt: new Date().toISOString(),
@@ -166,7 +166,7 @@ export default function SidePanel({
     setIsHistoryOpen(false);
   };
 
-  const handleSelectSession = (session: ChatSession) => {
+  const handleSelectSession = (session: Chat) => {
     setActiveSessionId(session.id);
     setMessages(sessionMessages[session.id] ?? []);
     setInputValue("");
