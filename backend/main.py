@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, chat
+from routers import auth, chat, message, context
 from manage_env import verify_env_variables
 from contextlib import asynccontextmanager
 import models
@@ -45,6 +45,9 @@ app.add_middleware(
 # ==========================================
 app.include_router(auth.router)
 app.include_router(chat.router)
+app.include_router(message.router)
+app.include_router(context.router)
+
 
 @app.get("/health")
 async def health():

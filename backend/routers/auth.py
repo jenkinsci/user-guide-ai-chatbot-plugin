@@ -1,9 +1,6 @@
-import os
 from datetime import datetime, timedelta, timezone
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -39,12 +36,12 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    # 1. Decode the JWT to extract user claims
+    # Decode the JWT to extract user claims
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
         user_id: str | None = payload.get("sub")
 
-        print("TOKEN", user_id)
+        print("REQUESTER: ", user_id)
         
         if user_id is None:
             raise credentials_exception
@@ -53,7 +50,7 @@ async def get_current_user(
         print(e)
         raise credentials_exception
         
-    # 2. Query PostgreSQL to find the user (without filtering by deleted_at yet)
+    # Query PostgreSQL to find the user (without filtering by deleted_at yet)
     query = select(models.UserEntity).where(
         models.UserEntity.id == user_id
     )
