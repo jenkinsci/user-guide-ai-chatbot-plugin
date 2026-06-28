@@ -15,6 +15,7 @@ AsyncSessionLocal = async_sessionmaker(
 
 Base = declarative_base()
 
+
 async def get_database_session():
     """
     Yields an active database session and ensures it is closed after the request.

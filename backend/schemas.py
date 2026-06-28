@@ -26,7 +26,6 @@ class ChatTitleUpdateRequest(BaseModel):
     new_title: str
 
  
-
 class ChatResponse(BaseModel):
     id: int
     user_id: str
