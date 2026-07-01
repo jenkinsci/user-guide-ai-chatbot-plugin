@@ -1,6 +1,7 @@
 target
 
 # backend folder
+.env.prod
 .env
 .venv
 __pycache__
