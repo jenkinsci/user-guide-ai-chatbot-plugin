@@ -63,16 +63,13 @@ def dev():
 
 
 def prod():
-    print("--> Starting the project in prod mode...")
-    if not PYTHON.exists():
-        print(
-            "Error: Virtual environment not found. Please run 'python run.py install' first."
-        )
-        sys.exit(1)
-
     print("    Starting Docker services...")
-    subprocess.run(["docker", "compose", "--profile", "prod", "up", "-d"], check=True, cwd=SCRIPT_DIR)
-    print("    Docker services started.")
+    subprocess.run(
+        ["docker", "compose", "--profile", "prod", "up", "-d"],
+        check=True,
+        cwd=SCRIPT_DIR,
+    )
+    print("    Project started.")
 
 
 def test():
@@ -148,8 +145,12 @@ def show_help():
     print(
         "  python run.py install     - Create virtual environment and install dependencies"
     )
-    print("  python run.py prod        - Execute the main application in production mode")
-    print("  python run.py dev         - Execute the main application in development mode")
+    print(
+        "  python run.py prod        - Execute the main application in production mode"
+    )
+    print(
+        "  python run.py dev         - Execute the main application in development mode"
+    )
     print("  python run.py test        - Run the test suite with pytest")
     print("  python run.py format      - Format code with black")
     print(
