@@ -4,7 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.model.RootAction;
-import org.acegisecurity.Authentication;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import jenkins.model.Jenkins;
@@ -73,6 +72,9 @@ public class ChatbotApiAction implements RootAction {
      * Intercepts all requests matching /chatbot-api/* and acts as a proxy.
      */
     public void doDynamic(StaplerRequest2 request, StaplerResponse2 response) throws Exception {
+
+        Jenkins.get().checkPermission(Jenkins.READ);
+        
         // Get Backend URL
         ChatbotGlobalConfig pluginConfig = ChatbotGlobalConfig.get();
 
