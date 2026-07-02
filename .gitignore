@@ -1,14 +1,19 @@
 target
 
 # backend folder
+.env.prod
 .env
 .venv
 __pycache__
 output
 logs
-test-reports
+test_reports
 qdrant_data
+postgres_data
 *.htpasswd
+
+# frontend build
+webapp
 
 # frontend folder -> frontend/.gitignore
 
