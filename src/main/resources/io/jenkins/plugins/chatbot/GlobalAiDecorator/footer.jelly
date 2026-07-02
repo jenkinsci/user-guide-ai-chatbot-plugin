@@ -2,7 +2,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <div id="jenkins-ai-chatbot-root"
          data-plugin-base-url="${resURL}/plugin/user-guide-ai-chatbot"
-         data-api-url="${rootURL}/chatbot-api/proxy"
+         data-api-url="${rootURL}/chatbot-api/"
          data-crumb-header="${h.getCrumbRequestField()}"
          data-crumb-value="${h.getCrumb(request)}"/>
     <script src="${resURL}/plugin/user-guide-ai-chatbot/js/bundle.js" type="text/javascript"/>

@@ -1,7 +1,7 @@
 interface ApiRequestParams {
-  method: "GET" | "POST" | "PUT" | "DELETE";
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
-  payload?: any;
+  payload?: object;
 }
 
 export const apiCall = async ({ method, path, payload }: ApiRequestParams) => {
@@ -9,10 +9,15 @@ export const apiCall = async ({ method, path, payload }: ApiRequestParams) => {
     return proxyApiCall({
       method,
       path,
+
       payload,
     });
   } else {
-    return devApiCall({ method, path, payload });
+    return devApiCall({
+      method,
+      path,
+      payload,
+    });
   }
 };
 
@@ -21,9 +26,8 @@ export const devApiCall = async ({
   path,
   payload,
 }: ApiRequestParams) => {
-  const DUMMY_JWT_KEY =
-    import.meta.env.VITE_DUMMY_JWT_KEY;
-  const DEV_API_URL = "http://localhost:5000/";
+  const DUMMY_JWT_KEY = import.meta.env.VITE_DUMMY_JWT_KEY;
+  const DEV_API_URL = import.meta.env.VITE_DEV_API_URL;
   const FINAL_PATH = DEV_API_URL + path;
 
   try {
@@ -52,29 +56,30 @@ export const devApiCall = async ({
 };
 
 export const proxyApiCall = async ({
-  method: targetMethod,
-  path: targetPath,
-  payload: targetPayload,
+  method,
+  path,
+  payload,
 }: ApiRequestParams) => {
   const rootElement = document.getElementById("jenkins-ai-chatbot-root");
-
-  const apiUrl = rootElement?.getAttribute("data-api-url") || "";
+  const proxyUrl = rootElement?.getAttribute("data-api-url") || "";
   const crumbHeader =
     rootElement?.getAttribute("data-crumb-header") || "Jenkins-Crumb";
   const crumbValue = rootElement?.getAttribute("data-crumb-value") || "";
 
+  const fullUrl = proxyUrl + path;
+
   try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
+    const response = await fetch(fullUrl, {
+      method: method,
       headers: {
         "Content-Type": "application/json",
         [crumbHeader]: crumbValue,
       },
-      body: JSON.stringify({
-        targetMethod,
-        targetPath,
-        targetPayload: targetPayload || null,
-      }),
+      body:
+        payload &&
+        JSON.stringify({
+          ...payload,
+        }),
     });
 
     if (!response.ok) {
@@ -83,10 +88,7 @@ export const proxyApiCall = async ({
 
     return response;
   } catch (error) {
-    console.error(
-      `Failed to proxy ${targetMethod} request to ${targetPath}:`,
-      error,
-    );
+    console.error(`Failed to proxy ${method} request to ${path}:`, error);
     throw error;
   }
 };

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.chatbot;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
 import jenkins.model.GlobalConfiguration;
@@ -13,18 +14,17 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.jenkinsci.Symbol;
 
+import java.util.regex.Matcher;
+
 @Extension
 @Symbol("chatbotConfig")
 public class ChatbotGlobalConfig extends GlobalConfiguration {
 
-    // Store the URL as a standard plain text string
     private String backendUrl;
 
-    // Store only the ID of the jwtSecret, not the actual secret
     private String jwtSecretId;
 
     public ChatbotGlobalConfig() {
-        // Load the saved configuration from disk on startup
         load();
     }
 
@@ -61,7 +61,7 @@ public class ChatbotGlobalConfig extends GlobalConfiguration {
                         Jenkins.get(),
                         StringCredentials.class,
                         URIRequirementBuilder.create().build(),
-                        null
+                        CredentialsMatchers.always()
                 )
                 .includeCurrentValue(jwtSecretId);
     }
