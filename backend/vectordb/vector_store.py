@@ -62,9 +62,6 @@ def get_vector_store():
     return vectorstore
 
 
-qdrant_vectorstore = get_vector_store()
-
-
 if __name__ == "__main__":
     load_dotenv()
     qdrant_vectorstore = get_vector_store()

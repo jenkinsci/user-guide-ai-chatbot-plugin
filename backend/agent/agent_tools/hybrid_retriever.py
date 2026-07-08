@@ -1,10 +1,10 @@
-from typing import Any
+from typing import Any, DefaultDict
 from vectordb.vector_store import get_vector_store
 from langchain_core.documents import Document
 from qdrant_client.http.models import models
 
 
-def hybrid_retriever(query: str, metadata: dict = {}, k: int = 2) -> list[Document]:
+def hybrid_retriever(query: str, metadata: dict, k: int = 2) -> list[Document]:
     """
     Make a query using Qdrant Hybrid Retriever
 
