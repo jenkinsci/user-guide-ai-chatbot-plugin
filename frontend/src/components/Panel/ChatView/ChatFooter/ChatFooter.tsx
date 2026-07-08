@@ -12,9 +12,19 @@ export default function ChatFooter({
   inputValue: string;
   setInputValue: (s: string) => void;
 }) {
+  const rootElement = document.getElementById("jenkins-ai-chatbot-root");
+  const currentPageName =
+    rootElement?.getAttribute("data-current-screen") || "";
+
+  console.log("ROOT: " + rootElement);
+  console.log("PG: " + currentPageName);
+
   return (
     <div>
-      <ChatTools onUploadContext={onUploadContext} currentPageName="Sample" />
+      <ChatTools
+        onUploadContext={onUploadContext}
+        currentPageName={currentPageName}
+      />
       <ChatInput
         handleSendMessage={onSendMessage}
         inputValue={inputValue}

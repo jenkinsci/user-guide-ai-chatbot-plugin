@@ -11,11 +11,13 @@ import hudson.security.ACL;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.Date;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 
@@ -63,6 +65,7 @@ public class ChatbotApiAction implements RootAction {
                 .withExpiresAt(new Date(System.currentTimeMillis() + ttl))
                 .sign(signingAlgorithm);
     }
+
 
     /**
      * Intercepts all requests matching /chatbot-api/* and acts as a proxy.
