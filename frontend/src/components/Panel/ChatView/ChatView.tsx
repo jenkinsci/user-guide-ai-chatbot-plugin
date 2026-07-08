@@ -283,6 +283,23 @@ export default function ChatView({
     await onSendMessage(question.content, snapshot);
   };
 
+  const onUploadContext = async () => {
+    try {
+      const response = await apiCall({
+        method: "POST",
+        path: `context/${activeChatId}`,
+        payload: {},
+      });
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Failed to upload context. Please try again.");
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleCloseError = () => {
     setErrorMessage(null);
   };
@@ -311,6 +328,7 @@ export default function ChatView({
       )}
       <ChatFooter
         onSendMessage={(prompt) => onSendMessage(prompt)}
+        onUploadContext={onUploadContext}
         inputValue={inputValue}
         setInputValue={setInputValue}
       />

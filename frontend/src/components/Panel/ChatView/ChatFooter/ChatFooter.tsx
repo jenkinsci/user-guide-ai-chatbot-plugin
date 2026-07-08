@@ -3,18 +3,18 @@ import { ChatTools } from "./ChatTools";
 
 export default function ChatFooter({
   onSendMessage,
+  onUploadContext,
   inputValue,
   setInputValue,
 }: {
   onSendMessage: (prompt: string) => void;
+  onUploadContext: () => Promise<boolean>;
   inputValue: string;
   setInputValue: (s: string) => void;
 }) {
-  const onAttachContext = () => {};
-
   return (
     <div>
-      <ChatTools onAttachContext={onAttachContext} currentPageName="Sample" />
+      <ChatTools onUploadContext={onUploadContext} currentPageName="Sample" />
       <ChatInput
         handleSendMessage={onSendMessage}
         inputValue={inputValue}

@@ -1,15 +1,61 @@
-import { Box, Typography, Chip } from "@mui/material";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  Chip,
+  CircularProgress,
+  Tooltip,
+} from "@mui/material";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import SyncIcon from "@mui/icons-material/Sync";
 
 interface ChatToolsProps {
   currentPageName: string;
-  onAttachContext: () => void;
+  onUploadContext: () => Promise<boolean>;
 }
 
 export function ChatTools({
   currentPageName,
-  onAttachContext,
+  onUploadContext,
 }: ChatToolsProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedTime, setUploadedTime] = useState<string | null>(null);
+  const [showSuccessTick, setShowSuccessTick] = useState(false);
+
+  const handleUploadClick = async () => {
+    if (isUploading) return;
+
+    setIsUploading(true);
+    setShowSuccessTick(false);
+
+    try {
+      const uploaded = await onUploadContext();
+
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      if (uploaded) {
+        setUploadedTime(timeString);
+        setShowSuccessTick(true);
+      }
+
+      setTimeout(() => {
+        setShowSuccessTick(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to upload context:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const isPersistentSavedState =
+    !!uploadedTime && !isUploading && !showSuccessTick;
+
   return (
     <Box
       sx={{
@@ -35,7 +81,7 @@ export function ChatTools({
           color: (theme) => `${theme.palette.text.secondary} !important`,
         }}
       >
-        Current page:{" "}
+        Page:{" "}
         <Typography
           component="span"
           variant="body2"
@@ -47,27 +93,55 @@ export function ChatTools({
           {currentPageName}
         </Typography>
       </Typography>
-      <Chip
-        onClick={onAttachContext}
-        title="Attach current page context to chat"
-        icon={<AttachFileIcon fontSize="small" />}
-        label="Attach Context"
-        sx={{
-          bgcolor: (theme) =>
-            theme.palette.mode === "light" ? "grey.100" : "grey.800",
-          color: "text.primary",
-          fontWeight: 500,
-          "&:hover": {
-            bgcolor: (theme) =>
-              theme.palette.mode === "light" ? "grey.200" : "grey.700",
-          },
-          "&:focus-visible": {
-            outline: "2px solid",
-            outlineColor: "primary.main",
-            outlineOffset: "1px",
-          },
-        }}
-      />
+
+      <Tooltip
+        title={
+          uploadedTime
+            ? "Context saved. Click again to update with the latest page state."
+            : "Upload current page context to chat"
+        }
+        placement="top"
+        arrow
+      >
+        <Chip
+          onClick={handleUploadClick}
+          disabled={isUploading}
+          color={
+            showSuccessTick || isPersistentSavedState ? "success" : "default"
+          }
+          variant={isPersistentSavedState ? "outlined" : "filled"}
+          icon={
+            isUploading ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : showSuccessTick ? (
+              <CheckCircleIcon fontSize="small" />
+            ) : uploadedTime ? (
+              <SyncIcon fontSize="small" />
+            ) : (
+              <UploadFileIcon fontSize="small" />
+            )
+          }
+          label={
+            isUploading
+              ? "Uploading..."
+              : showSuccessTick
+                ? "Uploaded!"
+                : uploadedTime
+                  ? `Updated at ${uploadedTime}`
+                  : "Upload Context"
+          }
+          sx={{
+            fontWeight: 500,
+            cursor: "pointer",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: "1px",
+            },
+            transition: "all 0.3s ease",
+          }}
+        />
+      </Tooltip>
     </Box>
   );
 }
