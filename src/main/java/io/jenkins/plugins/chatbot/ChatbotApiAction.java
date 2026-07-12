@@ -22,6 +22,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @Extension
 public class ChatbotApiAction implements RootAction {
@@ -203,7 +204,10 @@ public class ChatbotApiAction implements RootAction {
     private void addBuildContext(JSONObject rootNode, Run<?, ?> run) throws Exception {
         JSONObject buildDetails = new JSONObject();
         buildDetails.put("number", run.getNumber());
-        buildDetails.put("result", run.getResult() != null ? run.getResult().toString() : "IN_PROGRESS");
+
+        hudson.model.Result currentResult = run.getResult();
+        buildDetails.put("result", currentResult != null ? currentResult.toString() : "IN_PROGRESS");
+
         buildDetails.put("duration", run.getDuration());
         buildDetails.put("timestamp", run.getTimestamp().getTimeInMillis());
 
@@ -215,9 +219,11 @@ public class ChatbotApiAction implements RootAction {
         if (previousRun != null) {
             JSONObject prevBuildDetails = new JSONObject();
             prevBuildDetails.put("number", previousRun.getNumber());
-            prevBuildDetails.put(
-                    "result",
-                    previousRun.getResult() != null ? previousRun.getResult().toString() : "UNKNOWN");
+
+            // Store previous result in a local variable as well
+            hudson.model.Result prevResult = previousRun.getResult();
+            prevBuildDetails.put("result", prevResult != null ? prevResult.toString() : "UNKNOWN");
+
             buildDetails.put("previousBuild", prevBuildDetails);
         }
 
@@ -245,6 +251,7 @@ public class ChatbotApiAction implements RootAction {
     /**
      * Intercepts all requests matching /chatbot-api/* and acts as a proxy.
      */
+    @RequirePOST
     public void doDynamic(StaplerRequest2 request, StaplerResponse2 response) throws Exception {
         Jenkins.get().checkPermission(Jenkins.READ);
 
