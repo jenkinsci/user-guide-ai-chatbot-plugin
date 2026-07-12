@@ -59,6 +59,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-aggregator</artifactId>
+      <version>608.v67378e9d3db_1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.auth0</groupId>
       <artifactId>java-jwt</artifactId>
       <version>4.5.2</version>
@@ -72,7 +78,6 @@
       <artifactId>plain-credentials</artifactId>
     </dependency>
   </dependencies>
-
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>

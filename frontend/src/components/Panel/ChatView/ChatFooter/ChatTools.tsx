@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -9,13 +9,24 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SyncIcon from "@mui/icons-material/Sync";
+import { apiCall } from "../../../../api/api";
 
 interface ChatToolsProps {
+  activeChatId: number | null;
   currentPageName: string;
   onUploadContext: () => Promise<boolean>;
 }
 
+const formatDateToTwoDigit = (date: Date) => {
+  const timeString = date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return timeString;
+};
+
 export function ChatTools({
+  activeChatId,
   currentPageName,
   onUploadContext,
 }: ChatToolsProps) {
@@ -31,12 +42,8 @@ export function ChatTools({
 
     try {
       const uploaded = await onUploadContext();
-
       const now = new Date();
-      const timeString = now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const timeString = formatDateToTwoDigit(now);
 
       if (uploaded) {
         setUploadedTime(timeString);
@@ -55,6 +62,31 @@ export function ChatTools({
 
   const isPersistentSavedState =
     !!uploadedTime && !isUploading && !showSuccessTick;
+
+  useEffect(() => {
+    const fetchLastUploadDate = async () => {
+      setUploadedTime(null);
+      if (!activeChatId) return;
+
+      try {
+        const response = await apiCall({
+          method: "GET",
+          path: `context/${activeChatId}/last-upload`,
+        });
+        const data = await response.json();
+
+        const lastUploadAt = data["last_upload_at"];
+
+        if (!lastUploadAt) return;
+
+        setUploadedTime(formatDateToTwoDigit(new Date(lastUploadAt)));
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    fetchLastUploadDate();
+  }, [activeChatId]);
 
   return (
     <Box

@@ -54,6 +54,9 @@ class ContextResponse(BaseModel):
     success: bool
     received_data: JenkinsContext
 
+class LastContextUploadResponse(BaseModel):
+    last_upload_at: datetime | None
+
 
 # ==========================================
 # CHAT SCHEMAS

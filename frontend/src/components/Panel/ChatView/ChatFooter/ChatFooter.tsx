@@ -2,11 +2,13 @@ import ChatInput from "./ChatInput";
 import { ChatTools } from "./ChatTools";
 
 export default function ChatFooter({
+  activeChatId,
   onSendMessage,
   onUploadContext,
   inputValue,
   setInputValue,
 }: {
+  activeChatId: number | null;
   onSendMessage: (prompt: string) => void;
   onUploadContext: () => Promise<boolean>;
   inputValue: string;
@@ -16,12 +18,10 @@ export default function ChatFooter({
   const currentPageName =
     rootElement?.getAttribute("data-current-screen") || "";
 
-  console.log("ROOT: " + rootElement);
-  console.log("PG: " + currentPageName);
-
   return (
     <div>
       <ChatTools
+        activeChatId={activeChatId}
         onUploadContext={onUploadContext}
         currentPageName={currentPageName}
       />

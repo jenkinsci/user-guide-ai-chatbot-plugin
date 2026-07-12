@@ -193,7 +193,7 @@ public class ChatbotApiAction implements RootAction {
         jobDetails.put("jobType", job.getClass().getSimpleName());
 
         String configXml = job.getConfigFile().asString();
-        jobDetails.put("configXml", limitStringSize(configXml, 5000));
+        jobDetails.put("configXml", limitStringSize(configXml, 5000, false));
 
         if (job.getClass().getSimpleName().contains("WorkflowJob")) {
             jobDetails.put("isPipeline", true);
@@ -217,9 +217,9 @@ public class ChatbotApiAction implements RootAction {
         buildDetails.put("duration", run.getDuration());
         buildDetails.put("timestamp", run.getTimestamp().getTimeInMillis());
 
-        List<String> logLines = run.getLog(250);
+        List<String> logLines = run.getLog(300);
         String combinedLogs = String.join("\n", logLines);
-        buildDetails.put("consoleLogTail", limitStringSize(combinedLogs, 8000));
+        buildDetails.put("consoleLogTail", limitStringSize(combinedLogs, 8000, true));
 
         Run<?, ?> previousRun = run.getPreviousBuild();
         if (previousRun != null) {
@@ -233,15 +233,21 @@ public class ChatbotApiAction implements RootAction {
         rootNode.put("buildDetails", buildDetails);
     }
 
+
     /**
      * Helper utility to safely truncate long strings to preserve network efficiency.
      */
-    private String limitStringSize(String rawValue, int maxLength) {
+    private String limitStringSize(String rawValue, int maxLength, boolean fromBottom) {
+
         if (rawValue == null) {
             return "";
         }
         if (rawValue.length() > maxLength) {
-            return rawValue.substring(0, maxLength) + "... [CONTENT TRUNCATED FOR PERFORMANCE]";
+            if(fromBottom) {
+                return "... [CONTENT TRUNCATED FOR PERFORMANCE]" + rawValue.substring(rawValue.length() - maxLength);
+            }else{
+                return rawValue.substring(0, maxLength) + "... [CONTENT TRUNCATED FOR PERFORMANCE]";
+            }
         }
         return rawValue;
     }
