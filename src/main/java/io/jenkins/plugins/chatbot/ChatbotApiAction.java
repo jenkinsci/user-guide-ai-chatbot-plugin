@@ -220,7 +220,6 @@ public class ChatbotApiAction implements RootAction {
             JSONObject prevBuildDetails = new JSONObject();
             prevBuildDetails.put("number", previousRun.getNumber());
 
-            // Store previous result in a local variable as well
             hudson.model.Result prevResult = previousRun.getResult();
             prevBuildDetails.put("result", prevResult != null ? prevResult.toString() : "UNKNOWN");
 
@@ -251,7 +250,6 @@ public class ChatbotApiAction implements RootAction {
     /**
      * Intercepts all requests matching /chatbot-api/* and acts as a proxy.
      */
-    @RequirePOST
     public void doDynamic(StaplerRequest2 request, StaplerResponse2 response) throws Exception {
         Jenkins.get().checkPermission(Jenkins.READ);
 
