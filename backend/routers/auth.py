@@ -72,7 +72,6 @@ async def get_current_user(
         await db_session.commit()
         await db_session.refresh(new_provisioned_user)
 
-
         return new_provisioned_user
 
 

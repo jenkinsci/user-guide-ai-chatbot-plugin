@@ -90,7 +90,6 @@ async def send_message_stream(
     )
     chat = (await db_session.execute(chat_query)).scalars().first()
 
-
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found or access denied.")
 

@@ -1,12 +1,11 @@
 package io.jenkins.plugins.chatbot;
 
+import hudson.Extension;
+import hudson.model.PageDecorator;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import hudson.Extension;
-import hudson.model.PageDecorator;
 
 @Extension
 public class GlobalAiDecorator extends PageDecorator {
