@@ -1,8 +1,7 @@
-from typing import Any, DefaultDict
 from vectordb.vector_store import get_vector_store
 from langchain_core.documents import Document
 from qdrant_client.http.models import models
-
+from langchain_core.tools import tool
 
 def hybrid_retriever(query: str, metadata: dict, k: int = 2) -> list[Document]:
     """
@@ -25,9 +24,12 @@ def hybrid_retriever(query: str, metadata: dict, k: int = 2) -> list[Document]:
         )
 
     metadata_filter = models.Filter(must=fields)
-    return get_vector_store().similarity_search(
-        query=query, k=k, filter=metadata_filter
-    )
+    try:
+        return get_vector_store().similarity_search(
+            query=query, k=k, filter=metadata_filter
+        )
+    except: 
+        return []
 
 
 if __name__ == "__main__":
