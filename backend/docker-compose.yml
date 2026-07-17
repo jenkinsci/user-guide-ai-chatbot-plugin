@@ -1,24 +1,35 @@
 services:
-  qdrant:
-    image: qdrant/qdrant:latest
+  backend:
+    build: .
+    container_name: fastapi_backend
     restart: unless-stopped
-    container_name: qdrant
     ports:
-      - 6333:6333
-      - 6334:6334
-    expose:
-      - 6333
-      - 6334
-      - 6335
-    volumes:
-      - ./qdrant_data:/qdrant/storage
+      - "8000:8000"
+    env_file:
+      - .env.prod
+    depends_on:
+      - postgres_db
+      - qdrant_db
     profiles:
-      - qdrant_no_auth
+      - prod
 
-  qdrant_auth:
+  postgres_db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      
+  qdrant_db:
     image: qdrant/qdrant:latest
     restart: unless-stopped
-    container_name: qdrant_auth
+    container_name: qdrant_db
     ports:
       - 6333:6333
       - 6334:6334
@@ -31,6 +42,5 @@ services:
       QDRANT__SERVICE__JWT_RBAC: "true"
     volumes:
       - ./qdrant_data:/qdrant/storage
-    profiles:
-      - qdrant_token_auth
+
  

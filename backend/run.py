@@ -47,8 +47,8 @@ def install():
     print("--> Installation complete.")
 
 
-def run():
-    print("--> Starting the project...")
+def dev():
+    print("--> Starting the project in dev mode...")
     if not PYTHON.exists():
         print(
             "Error: Virtual environment not found. Please run 'python run.py install' first."
@@ -60,6 +60,16 @@ def run():
     print("    Docker services started.")
 
     subprocess.run([str(PYTHON), str(SCRIPT_DIR / "main.py")], check=True)
+
+
+def prod():
+    print("    Starting Docker services...")
+    subprocess.run(
+        ["docker", "compose", "--profile", "prod", "up", "-d"],
+        check=True,
+        cwd=SCRIPT_DIR,
+    )
+    print("    Project started.")
 
 
 def test():
@@ -135,7 +145,12 @@ def show_help():
     print(
         "  python run.py install     - Create virtual environment and install dependencies"
     )
-    print("  python run.py run         - Execute the main application")
+    print(
+        "  python run.py prod        - Execute the main application in production mode"
+    )
+    print(
+        "  python run.py dev         - Execute the main application in development mode"
+    )
     print("  python run.py test        - Run the test suite with pytest")
     print("  python run.py format      - Format code with black")
     print(
@@ -155,8 +170,10 @@ if __name__ == "__main__":
 
     if task == "install":
         install()
-    elif task == "run":
-        run()
+    elif task == "prod":
+        prod()
+    elif task == "dev":
+        dev()
     elif task == "test":
         test()
     elif task == "format":
