@@ -89,6 +89,7 @@ async def get_chat_history(
     Retrieves the paginated history of a specific chat.
     Messages are ordered from the newest to the oldest.
     """
+
     # Verify that the chat exists, belongs to the user, and is not soft-deleted
     chat_validation_query = select(models.ChatEntity).where(
         models.ChatEntity.id == chat_id,
