@@ -274,7 +274,7 @@ def scrape_all_subreddit_sections(subreddit: str) -> Set[str]:
                 all_threads[k] = list
                 total_threads += len(list)
                 uniques_id.update([x.id for x in list])
-        except:
+        except Exception:
             pass
 
     for k, v in all_threads.items():
