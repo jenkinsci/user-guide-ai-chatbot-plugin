@@ -22,7 +22,7 @@ ecdsa==0.19.2
 email-validator==2.3.0
 fastapi==0.136.3
 fastembed==0.8.0
-filelock==3.29.0
+filelock==3.32.0
 flatbuffers==25.12.19
 frozenlist==1.8.0
 fsspec==2026.4.0
