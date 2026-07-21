@@ -87,7 +87,7 @@ ormsgpack==1.12.2
 overrides==7.7.0
 packaging==26.2
 pathspec==1.1.1
-pillow==12.2.0
+pillow==12.3.0
 platformdirs==4.10.0
 pluggy==1.6.0
 portalocker==3.2.0
