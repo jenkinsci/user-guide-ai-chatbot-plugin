@@ -32,7 +32,7 @@ def get_env_as_list(key: str, ok: bool = True) -> list[str]:
 
     try:
         return json.loads(json_value)
-    except:
+    except Exception:
         if ok:
             return []
         else:

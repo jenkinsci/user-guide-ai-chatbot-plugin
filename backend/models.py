@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    ForeignKey,
+    DateTime,
+    JSON,
+    Boolean,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -24,6 +33,40 @@ class UserEntity(Base):
     )
 
 
+class ContextEntity(Base):
+    __tablename__ = "contexts"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    chat_id = Column(
+        Integer, ForeignKey("chats.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
+
+    current_screen = Column(String(255), nullable=True)
+    root_url = Column(Text, nullable=True)
+    jenkins_version = Column(String(50), nullable=True)
+    system_message = Column(Text, nullable=True)
+
+    agent_stats = Column(JSON, nullable=True)
+    master_node = Column(JSON, nullable=True)
+    active_plugins = Column(JSON, nullable=True)
+
+    job_details = Column(JSON, nullable=True)
+    build_details = Column(JSON, nullable=True)
+    build_log_stored = Column(Boolean, default=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Relationship: 1 Context -> 1 Chat
+    chat = relationship("ChatEntity", back_populates="context")
+
+
 class ChatEntity(Base):
     __tablename__ = "chats"
 
@@ -45,6 +88,14 @@ class ChatEntity(Base):
     # Relationship: 1 Chat -> M QAPairs
     qa_pairs = relationship(
         "QAPairEntity", back_populates="chat", cascade="all, delete-orphan"
+    )
+
+    # Relationship: 1 Chat -> 1 Context
+    context = relationship(
+        "ContextEntity",
+        back_populates="chat",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
 

@@ -21,7 +21,4 @@ async def get_database_session():
     Yields an active database session and ensures it is closed after the request.
     """
     async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+        yield session
