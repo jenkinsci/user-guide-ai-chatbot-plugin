@@ -124,6 +124,9 @@ async def store_context(
         new_context = models.ContextEntity(
             build_log_stored=build_log_stored,
             current_screen=context_data.get("current_screen"),
+            root_url=context_data.get("root_url"),
+            system_message=context_data.get("system_message"),
+            agent_stats=context_data.get("agent_stats"),
             jenkins_version=context_data.get("jenkins_version"),
             active_plugins=context_data.get("active_plugins"),
             master_node=context_data.get("master_node"),

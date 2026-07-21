@@ -3,7 +3,8 @@ from langchain_core.documents import Document
 from qdrant_client.http.models import models
 from langchain_core.tools import tool
 
-def hybrid_retriever(query: str, metadata: dict, k: int = 2) -> list[Document]:
+
+async def hybrid_retriever(query: str, metadata: dict, k: int = 2) -> list[Document]:
     """
     Make a query using Qdrant Hybrid Retriever
 
@@ -25,10 +26,10 @@ def hybrid_retriever(query: str, metadata: dict, k: int = 2) -> list[Document]:
 
     metadata_filter = models.Filter(must=fields)
     try:
-        return get_vector_store().similarity_search(
+        return await get_vector_store().asimilarity_search(
             query=query, k=k, filter=metadata_filter
         )
-    except: 
+    except Exception:
         return []
 
 

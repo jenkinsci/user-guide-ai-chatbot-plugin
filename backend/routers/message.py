@@ -1,12 +1,13 @@
 from database import get_database_session
 from routers.auth import get_current_user, User
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 from sqlalchemy import update
+from agent.agent import execute_agent
 import models
 import schemas
 import asyncio
@@ -75,6 +76,7 @@ async def soft_delete_subsequent_history(
 @router.post("/send")
 async def send_message_stream(
     payload: schemas.MessageSendRequest,
+    request: Request,
     db_session: AsyncSession = Depends(get_database_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -82,6 +84,8 @@ async def send_message_stream(
     Standard chat flow using Server-Sent Events (SSE).
     Saves the question, streams the AI reply, and saves the final answer.
     """
+    agent_checkpointer = request.app.state.agent_checkpointer
+
     # Verify chat exists and belongs to the active user
     chat_query = select(models.ChatEntity).where(
         models.ChatEntity.id == payload.chat_id,
@@ -114,7 +118,9 @@ async def send_message_stream(
             yield f"data: {json.dumps(initial_metadata)}\n\n"
 
             # Stream chunks from the AI model
-            async for chunk in generate_ai_answer_stream(payload.content):
+            async for chunk in execute_agent(
+                payload.content, payload.chat_id, db_session, agent_checkpointer
+            ):
                 accumulated_answer += chunk
 
                 chunk_data = {"event": "chunk", "content": chunk}
@@ -132,7 +138,6 @@ async def send_message_stream(
             yield f"data: {json.dumps(final_metadata)}\n\n"
 
         except Exception as streaming_error:
-            # Handle AI failure or client disconnecting mid-stream
             print(f"[-] Streaming interrupted: {streaming_error}")
 
             # Save whatever partial answer was generated before the crash
@@ -152,6 +157,7 @@ async def send_message_stream(
 @router.post("/{qa_pair_id}/retry", response_model=schemas.QAPairResponse)
 async def retry_message(
     qa_pair_id: int,
+    request: Request,
     db_session: AsyncSession = Depends(get_database_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -192,7 +198,10 @@ async def retry_message(
     )
 
     return await send_message_stream(
-        payload=retry_payload, db_session=db_session, current_user=current_user
+        payload=retry_payload,
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
     )
 
 
@@ -200,6 +209,7 @@ async def retry_message(
 async def edit_message(
     qa_pair_id: int,
     payload: schemas.MessageEditRequest,
+    request: Request,
     db_session: AsyncSession = Depends(get_database_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -234,5 +244,8 @@ async def edit_message(
     )
 
     return await send_message_stream(
-        payload=edit_payload, db_session=db_session, current_user=current_user
+        payload=edit_payload,
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
     )

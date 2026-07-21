@@ -6,23 +6,22 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
-import hudson.PluginWrapper;
-import hudson.model.Computer;
-import hudson.model.Item;
-import hudson.model.Job;
-import hudson.model.PageDecorator;
-import hudson.model.RootAction;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.security.ACL;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import hudson.tasks.test.AbstractTestResultAction;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import jenkins.model.Jenkins;
+import jenkins.scm.RunWithSCM;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -151,8 +150,9 @@ public class ChatbotApiAction implements RootAction {
         return rootNode;
     }
 
+
     /**
-     * Level 1: Appends core system data using built-in JSONObject maps.
+     * Level 1: Appends core system data, infrastructure stats, and Master Node hardware info.
      */
     private void addDashboardContext(JSONObject rootNode) {
         Jenkins jenkins = Jenkins.get();
@@ -162,24 +162,70 @@ public class ChatbotApiAction implements RootAction {
             rootNode.put("jenkinsVersion", version.toString());
         }
 
-        JSONObject pluginsObject = new JSONObject();
+        // 1. Core Jenkins info
+        String rootUrl = jenkins.getRootUrl();
+        if (rootUrl != null) {
+            rootNode.put("rootUrl", rootUrl);
+        }
 
-        for (PluginWrapper plugin : jenkins.getPluginManager().getPlugins()) {
+        String systemMessage = jenkins.getSystemMessage();
+        if (systemMessage != null && !systemMessage.isEmpty()) {
+            rootNode.put("systemMessage", systemMessage);
+        }
+
+        // 2. Active Plugins
+        JSONObject pluginsObject = new JSONObject();
+        for (hudson.PluginWrapper plugin : jenkins.getPluginManager().getPlugins()) {
             if (plugin.isActive()) {
                 pluginsObject.put(plugin.getShortName(), plugin.getVersion());
             }
         }
-
         rootNode.put("activePlugins", pluginsObject);
 
-        Computer builtInComputer = jenkins.toComputer();
+        // 3. Master Node (Controller) & System Info
+        hudson.model.Computer builtInComputer = jenkins.toComputer();
         if (builtInComputer != null) {
             JSONObject masterNode = new JSONObject();
             masterNode.put("executors", builtInComputer.getNumExecutors());
             masterNode.put("isOnline", builtInComputer.isOnline());
-            masterNode.put("Description", "No description");
+
+            // JVM and OS Information
+            JSONObject systemInfo = new JSONObject();
+            systemInfo.put("osName", System.getProperty("os.name"));
+            systemInfo.put("osArch", System.getProperty("os.arch"));
+            systemInfo.put("osVersion", System.getProperty("os.version"));
+            systemInfo.put("javaVersion", System.getProperty("java.version"));
+
+            // Hardware and Memory Stats (Converted to Megabytes for readability)
+            Runtime runtime = Runtime.getRuntime();
+            systemInfo.put("availableProcessors", runtime.availableProcessors());
+            systemInfo.put("freeMemoryMB", runtime.freeMemory() / (1024 * 1024));
+            systemInfo.put("totalMemoryMB", runtime.totalMemory() / (1024 * 1024));
+            systemInfo.put("maxMemoryMB", runtime.maxMemory() / (1024 * 1024));
+
+            masterNode.put("systemInfo", systemInfo);
             rootNode.put("masterNode", masterNode);
         }
+
+        // 4. Infrastructure Overview (Agent count)
+        JSONObject agentStats = new JSONObject();
+        int onlineAgents = 0;
+        int offlineAgents = 0;
+
+        for (hudson.model.Node node : jenkins.getNodes()) {
+            hudson.model.Computer computer = node.toComputer();
+            if (computer != null) {
+                if (computer.isOnline()) {
+                    onlineAgents++;
+                } else {
+                    offlineAgents++;
+                }
+            }
+        }
+        agentStats.put("onlineAgents", onlineAgents);
+        agentStats.put("offlineAgents", offlineAgents);
+        rootNode.put("agentStats", agentStats);
+        System.out.println(rootNode);
     }
 
     /**
@@ -190,16 +236,51 @@ public class ChatbotApiAction implements RootAction {
         jobDetails.put("fullName", job.getFullName());
         jobDetails.put("jobType", job.getClass().getSimpleName());
 
+        // Basic metadata
+        jobDetails.put("url", job.getAbsoluteUrl());
+        jobDetails.put("isBuildable", job.isBuildable());
+        jobDetails.put("inQueue", job.isInQueue());
+
+        // Health score (0-100, representing the "weather" icon in Jenkins)
+        if (job.getBuildHealth() != null) {
+            jobDetails.put("healthScore", job.getBuildHealth().getScore());
+        }
+
+        // Job description
+        String description = job.getDescription();
+        if (description != null && !description.isEmpty()) {
+            jobDetails.put("description", limitStringSize(description, 1000, false));
+        }
+
         String configXml = job.getConfigFile().asString();
         jobDetails.put("configXml", limitStringSize(configXml, 5000, false));
 
+        // Pipeline vs Classic specific info
         if (job.getClass().getSimpleName().contains("WorkflowJob")) {
             jobDetails.put("isPipeline", true);
         } else {
             jobDetails.put("isPipeline", false);
+
+            // For Classic projects, extract trigger dependencies
+            if (job instanceof AbstractProject) {
+                AbstractProject<?, ?> abstractProject = (AbstractProject<?, ?>) job;
+
+                JSONArray upstream = new JSONArray();
+                for (AbstractProject<?, ?> up : abstractProject.getUpstreamProjects()) {
+                    upstream.add(up.getFullName());
+                }
+                jobDetails.put("upstreamProjects", upstream);
+
+                JSONArray downstream = new JSONArray();
+                for (AbstractProject<?, ?> down : abstractProject.getDownstreamProjects()) {
+                    downstream.add(down.getFullName());
+                }
+                jobDetails.put("downstreamProjects", downstream);
+            }
         }
 
         rootNode.put("jobDetails", jobDetails);
+        System.out.println(jobDetails);
     }
 
     /**
@@ -215,9 +296,79 @@ public class ChatbotApiAction implements RootAction {
         buildDetails.put("duration", run.getDuration());
         buildDetails.put("timestamp", run.getTimestamp().getTimeInMillis());
 
-        List<String> logLines = run.getLog(300);
+        // 1. Build Causes (Why did it start?)
+        CauseAction causeAction = run.getAction(CauseAction.class);
+        if (causeAction != null) {
+            JSONArray causes = new JSONArray();
+            for (Cause cause : causeAction.getCauses()) {
+                causes.add(cause.getShortDescription());
+            }
+            buildDetails.put("causes", causes);
+        }
+
+        // 2. Build Parameters (Were wrong parameters provided?)
+        ParametersAction paramsAction = run.getAction(ParametersAction.class);
+        if (paramsAction != null) {
+            JSONObject params = new JSONObject();
+            for (ParameterValue p : paramsAction.getParameters()) {
+                // parameter values can be strings, booleans, etc.
+                params.put(p.getName(), p.getValue());
+            }
+            buildDetails.put("parameters", params);
+        }
+
+        // 3. Test Results (Did it fail because of code tests?)
+        AbstractTestResultAction<?> testAction = run.getAction(AbstractTestResultAction.class);
+
+        if (testAction != null) {
+            JSONObject tests = new JSONObject();
+            tests.put("total", testAction.getTotalCount());
+            tests.put("failed", testAction.getFailCount());
+            tests.put("skipped", testAction.getSkipCount());
+            buildDetails.put("testResults", tests);
+        }
+
+        // 4. Execution Node (For classic projects, identifies where it ran)
+        if (run instanceof hudson.model.AbstractBuild) {
+            Node builtOn = ((hudson.model.AbstractBuild<?, ?>) run).getBuiltOn();
+            if (builtOn != null) {
+                buildDetails.put("builtOnNode", builtOn.getNodeName());
+            }
+        }
+
+        List<String> logLines = run.getLog(1000);
         String combinedLogs = String.join("\n", logLines);
-        buildDetails.put("consoleLogTail", limitStringSize(combinedLogs, 8000, true));
+        buildDetails.put("consoleLogTail", combinedLogs);
+
+        if (run instanceof RunWithSCM<?,?>) {
+            RunWithSCM<?, ?> runWithScm = (RunWithSCM<?, ?>) run;
+            List<ChangeLogSet<? extends Entry>> changeSets = runWithScm.getChangeSets();
+
+            JSONArray changes = new JSONArray();
+            int commitCount = 0;
+
+            for (ChangeLogSet<? extends Entry> set : changeSets) {
+                for (Entry entry : set) {
+                    if (commitCount >= 50) {
+                        break;
+                    }
+
+                    JSONObject commit = new JSONObject();
+                    commit.put("commitId", entry.getCommitId());
+                    commit.put("author", entry.getAuthor().getFullName());
+
+                    // Truncate the message just in case it's an extremely long commit description
+                    commit.put("message", limitStringSize(entry.getMsg(), 500, false));
+
+                    changes.add(commit);
+                    commitCount++;
+                }
+            }
+
+            if (!changes.isEmpty()) {
+                buildDetails.put("changes", changes);
+            }
+        }
 
         Run<?, ?> previousRun = run.getPreviousBuild();
         if (previousRun != null) {
@@ -231,6 +382,7 @@ public class ChatbotApiAction implements RootAction {
         }
 
         rootNode.put("buildDetails", buildDetails);
+        System.out.println(buildDetails);
     }
 
     /**
@@ -243,9 +395,9 @@ public class ChatbotApiAction implements RootAction {
         }
         if (rawValue.length() > maxLength) {
             if (fromBottom) {
-                return "... [CONTENT TRUNCATED FOR PERFORMANCE]" + rawValue.substring(rawValue.length() - maxLength);
+                return "... [CONTENT TRUNCATED]" + rawValue.substring(rawValue.length() - maxLength);
             } else {
-                return rawValue.substring(0, maxLength) + "... [CONTENT TRUNCATED FOR PERFORMANCE]";
+                return rawValue.substring(0, maxLength) + "... [CONTENT TRUNCATED]";
             }
         }
         return rawValue;
