@@ -7,20 +7,20 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.model.*;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
 import hudson.security.ACL;
+import hudson.tasks.test.AbstractTestResultAction;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import hudson.tasks.test.AbstractTestResultAction;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import jenkins.scm.RunWithSCM;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -149,7 +149,6 @@ public class ChatbotApiAction implements RootAction {
 
         return rootNode;
     }
-
 
     /**
      * Level 1: Appends core system data, infrastructure stats, and Master Node hardware info.
@@ -340,7 +339,7 @@ public class ChatbotApiAction implements RootAction {
         String combinedLogs = String.join("\n", logLines);
         buildDetails.put("consoleLogTail", combinedLogs);
 
-        if (run instanceof RunWithSCM<?,?>) {
+        if (run instanceof RunWithSCM<?, ?>) {
             RunWithSCM<?, ?> runWithScm = (RunWithSCM<?, ?>) run;
             List<ChangeLogSet<? extends Entry>> changeSets = runWithScm.getChangeSets();
 
