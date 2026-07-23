@@ -94,7 +94,7 @@ portalocker==3.2.0
 propcache==0.5.2
 protobuf==6.33.6
 py_rust_stemmers==0.1.8
-pyasn1==0.6.3
+pyasn1==0.6.4
 pybase64==1.4.3
 pycparser==3.0
 pydantic==2.13.4
