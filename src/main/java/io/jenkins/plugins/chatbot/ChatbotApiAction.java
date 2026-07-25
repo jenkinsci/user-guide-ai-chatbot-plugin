@@ -95,7 +95,7 @@ public class ChatbotApiAction implements RootAction {
     /**
      * Generates a cascading context payload using Jenkins built-in JSONObject map structure.
      */
-    private JSONObject gatherCurrentContext(StaplerRequest2 request) {
+    private JSONObject getCurrentContext(StaplerRequest2 request) {
         JSONObject rootNode = new JSONObject();
 
         GlobalAiDecorator decorator = PageDecorator.all().get(GlobalAiDecorator.class);
@@ -475,7 +475,7 @@ public class ChatbotApiAction implements RootAction {
                                 requestBody.isEmpty() ? new JSONObject() : JSONObject.fromObject(requestBody);
 
                         // Generate the Jenkins context and parse it as a JSON object
-                        JSONObject contextJson = gatherCurrentContext(request);
+                        JSONObject contextJson = getCurrentContext(request);
 
                         // Inject the context into the main payload under a specific key
                         payload.put("jenkinsContext", contextJson);
