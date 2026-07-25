@@ -390,4 +390,3 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         available_tools.append(get_build_details)
 
     return available_tools
-

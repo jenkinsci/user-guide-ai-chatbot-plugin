@@ -37,12 +37,13 @@ FINAL_LLM_TEMPERATURE = float(get_env("FINAL_LLM_TEMPERATURE"))
 
 
 AvailableTools = Literal[
-    "fetch_from_vectordb", 
-    "get_general_jenkins_context", 
-    "get_installed_plugin_list", 
-    "get_job_details", 
-    "get_build_details"
+    "fetch_from_vectordb",
+    "get_general_jenkins_context",
+    "get_installed_plugin_list",
+    "get_job_details",
+    "get_build_details",
 ]
+
 
 class RouterDecision(BaseModel):
     thought: str = Field(description="Your internal reasoning about what to do next.")
@@ -52,12 +53,13 @@ class RouterDecision(BaseModel):
     # 2. Force the LLM to pick ONLY from the allowed list
     tool_name: Optional[AvailableTools] = Field(
         default=None,
-        description="If action is TOOL_CALL, the exact name of the tool to use. Otherwise, null."
+        description="If action is TOOL_CALL, the exact name of the tool to use. Otherwise, null.",
     )
     tool_arguments: Optional[Dict[str, Any]] = Field(
         default=None,
-        description="If action is TOOL_CALL, a JSON object containing the arguments. Otherwise, null."
+        description="If action is TOOL_CALL, a JSON object containing the arguments. Otherwise, null.",
     )
+
 
 class Agent:
 
@@ -203,12 +205,16 @@ class Agent:
 
         error_count = 0
         for msg in reversed(messages[-5:]):
-            if msg.__class__.__name__ == "ToolMessage" and "System Error" in str(msg.content):
+            if msg.__class__.__name__ == "ToolMessage" and "System Error" in str(
+                msg.content
+            ):
                 error_count += 1
-                
+
         # If the LLM failed to call tools correctly 2 times in a row, give up and proceed
         if error_count >= 2:
-            print("[SAFEGUARD ACTIVATED]: Too many tool errors. Forcing final response.")
+            print(
+                "[SAFEGUARD ACTIVATED]: Too many tool errors. Forcing final response."
+            )
             return "generate_final_response"
 
         if isinstance(last_message, AIMessage) and last_message.invalid_tool_calls:
@@ -270,7 +276,10 @@ async def execute_agent_prod(
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
-    execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}, "recursion_limit": 10}
+    execution_config: RunnableConfig = {
+        "configurable": {"thread_id": str(chat_id)},
+        "recursion_limit": 10,
+    }
 
     input_message: MessagesState = {"messages": [HumanMessage(content=prompt)]}
 
@@ -304,7 +313,10 @@ async def execute_agent_debug(
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
-    execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}, "recursion_limit": 10}
+    execution_config: RunnableConfig = {
+        "configurable": {"thread_id": str(chat_id)},
+        "recursion_limit": 10,
+    }
 
     input_message: MessagesState = {"messages": [HumanMessage(content=prompt)]}
 
