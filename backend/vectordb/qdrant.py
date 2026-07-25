@@ -11,12 +11,7 @@ from langchain_core.documents import Document
 
 load_dotenv()
 
-QDRANT_HOST = get_env("QDRANT_HOST")
-QDRANT_PORT = int(get_env("QDRANT_PORT"))
-QDRANT_URL = f"{QDRANT_HOST}:{QDRANT_PORT}"
-QDRANT_SSL = get_env("QDRANT_SSL").lower() == "true"
 QDRANT_COLLECTION_NAME = get_env("QDRANT_COLLECTION_NAME")
-QDRANT_SECRET_KEY = get_env("QDRANT_SECRET_KEY")
 
 
 @ttl_cache(maxsize=1, ttl=3540)
@@ -24,6 +19,13 @@ def get_qdrant_client():
     """
     Returns a Qdrant client. Result is cached for 3540 seconds.
     """
+
+    QDRANT_HOST = get_env("QDRANT_HOST")
+    QDRANT_PORT = int(get_env("QDRANT_PORT"))
+    QDRANT_URL = f"{QDRANT_HOST}:{QDRANT_PORT}"
+    QDRANT_SSL = get_env("QDRANT_SSL").lower() == "true"
+    QDRANT_SECRET_KEY = get_env("QDRANT_SECRET_KEY")
+
     admin_token = None
     if QDRANT_SECRET_KEY:
         admin_token = generate_admin_token(
