@@ -4,7 +4,7 @@ from routers.auth import get_current_user, User
 from database import get_database_session
 import schemas
 from langchain_qdrant import QdrantVectorStore
-from vectordb.vector_store import get_vector_store
+from vectordb.qdrant import get_vector_store
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from typing import List
@@ -60,7 +60,7 @@ async def manage_logs(
                 metadata={
                     "chat_id": chat_id,
                     "chunk_index": index,
-                    "source": "jenkins_build_log",
+                    "data_source": "jenkins_build_log",
                 },
             )
             documents.append(doc)

@@ -5,6 +5,7 @@ from pathlib import Path
 from ..tools.common import read_json_file
 from ..models import DataSource
 from dotenv import load_dotenv
+from vectordb.qdrant import get_vector_store
 
 
 def embedder(
@@ -51,7 +52,6 @@ def embedder(
 
 
 def start_embedder(sources: list[DataSource], output_dir: Path):
-    from vectordb.vector_store import get_vector_store
 
     print("--------- START EMBEDDING PHASE ---------")
     vector_store = get_vector_store()

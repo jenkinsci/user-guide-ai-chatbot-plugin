@@ -54,7 +54,7 @@ class RouterDecision(BaseModel):
 class Agent:
 
     def __init__(
-        self, chat_id: int, context: dict, checkpointer: AsyncPostgresSaver
+        self, chat_id: int, prompt: str, context: dict, checkpointer: AsyncPostgresSaver
     ) -> None:
         router_llm = get_llm_client(
             provider=ROUTER_LLM_PROVIDER,
@@ -74,7 +74,7 @@ class Agent:
         )
 
         self.checkpointer = checkpointer
-        self.tools = get_tool_list(chat_id, context)
+        self.tools = get_tool_list(chat_id, context, prompt)
 
     def router_node(self, state: MessagesState) -> dict:
         """
@@ -242,7 +242,7 @@ async def execute_agent_prod(
     Streams both "messages" (for frontend tokens) and "updates" (for state debugging).
     """
     context = await fetch_context_from_db(chat_id, db_session)
-    app = Agent(chat_id, context, checkpointer).create_state_graph()
+    app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
     execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}}
 
@@ -276,7 +276,7 @@ async def execute_agent_debug(
     Streams both "messages" (for frontend tokens) and "updates" (for state debugging).
     """
     context = await fetch_context_from_db(chat_id, db_session)
-    app = Agent(chat_id, context, checkpointer).create_state_graph()
+    app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
     execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}}
 
