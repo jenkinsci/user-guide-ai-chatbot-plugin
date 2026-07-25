@@ -250,7 +250,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         """
         Query the vector database for official documentation and community Q&A.
         Use this tool ONLY for Jenkins concepts.
-        Do NOT use this tool to search for user-specific logs, job details, or local context.
+        Do NOT use this tool to search for specific build logs, information regarding the job details, or user local context.
 
         Args:
             query: The search input (e.g., "How to write a declarative pipeline", "Docker plugin setup").
@@ -327,7 +327,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
     @tool
     async def get_general_jenkins_context() -> str:
         """
-        Retrieve global settings for the current Jenkins instance.
+        Retrieve global settings for the current user's Jenkins instance.
         Use this tool to find out the Jenkins version, the master configuration,
         system messages, and the current screen the user is viewing.
         """
@@ -374,7 +374,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         @tool
         async def get_build_details(log_search_query: str) -> str:
             """
-            Retrieve the execution details of the current Jenkins build (status, timestamp, duration)
+            Retrieve the execution details of the current Jenkins build (status, timestamp, duration) the user is currently looking at
             AND search its console logs for specific errors or keywords.
 
             Args:
@@ -391,76 +391,3 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
 
     return available_tools
 
-
-if __name__ == "__main__":
-
-    async def fetch_from_vectordb(user_query: str, query: str) -> str:
-        """
-        Query the vector database for official documentation and community Q&A.
-        Use this tool ONLY for Jenkins concepts.
-        Do NOT use this tool to search for user-specific logs, job details, or local context.
-
-        Args:
-            query: The search input (e.g., "How to write a declarative pipeline", "Docker plugin setup").
-        """
-
-        k = 50 if ENABLE_RERANKING else 3
-
-        documents = await hybrid_retriever(query=query, k=k)
-
-        # Rerank results
-        ordered_documents = documents
-        if ENABLE_RERANKING:
-            try:
-                ordered_documents: list[Document] = [
-                    data["document"]
-                    for data in get_reranked_documents(user_query, documents)
-                ]
-            except Exception as e:
-                print(e)
-                ordered_documents = documents
-
-        output = "These documents might be useful to answer user question:\n"
-        cb_useful = None
-
-        for i, v in enumerate(ordered_documents[:3]):
-            # Apply extended retrieval
-            related_id = v.metadata.get("related_id")
-            if related_id:
-                # If is a codeblock, check which is the related chunk and pass as if that
-                # one was fetched from the hybrid retriever
-                print("RELATED: ", related_id)
-                payload_filter = models.Filter(
-                    must=[models.HasIdCondition(has_id=[related_id])]
-                )
-
-                records, _ = get_with_metadata(payload_filter=payload_filter, limit=1)
-                docs = qdrant_record_to_langchain_doc(records)
-                if len(docs) == 0:
-                    continue
-                else:
-                    cb_useful = (v.metadata["parent_id"], v.metadata["chunk_index"])
-                    v = docs[0]
-
-            data_source = v.metadata.get("data_source")
-            retrieval_type = (
-                "parent"
-                if data_source == "discourse_topics" or data_source == "reddit_threads"
-                else "window"
-            )
-            final_text, _ = retrieve_chunk_context(
-                v, retrieval_type, useful_cb=cb_useful
-            )
-
-            output += f"DOCUMENT {i}:\n{final_text}\n"
-
-        return output
-
-    user_query = "Show me a common Jenkins error log"
-    query = "error log"
-
-    async def run():
-        result = await fetch_from_vectordb(user_query=user_query, query=query)
-        print(result)
-
-    asyncio.run(run())

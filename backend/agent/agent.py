@@ -36,20 +36,28 @@ FINAL_LLM_API_KEY = get_env("FINAL_LLM_API_KEY")
 FINAL_LLM_TEMPERATURE = float(get_env("FINAL_LLM_TEMPERATURE"))
 
 
+AvailableTools = Literal[
+    "fetch_from_vectordb", 
+    "get_general_jenkins_context", 
+    "get_installed_plugin_list", 
+    "get_job_details", 
+    "get_build_details"
+]
+
 class RouterDecision(BaseModel):
     thought: str = Field(description="Your internal reasoning about what to do next.")
     action: Literal["TOOL_CALL", "READY", "OUT_OF_SCOPE"] = Field(
         description="The action to take."
     )
-    tool_name: Optional[str] = Field(
+    # 2. Force the LLM to pick ONLY from the allowed list
+    tool_name: Optional[AvailableTools] = Field(
         default=None,
-        description="If action is TOOL_CALL, the exact name of the tool to use (e.g., 'get_build_details'). Otherwise, null.",
+        description="If action is TOOL_CALL, the exact name of the tool to use. Otherwise, null."
     )
     tool_arguments: Optional[Dict[str, Any]] = Field(
         default=None,
-        description="If action is TOOL_CALL, a JSON object containing the arguments for the tool. Otherwise, null.",
+        description="If action is TOOL_CALL, a JSON object containing the arguments. Otherwise, null."
     )
-
 
 class Agent:
 
@@ -139,6 +147,12 @@ class Agent:
                 "Do NOT attempt to solve the issue or provide a tutorial."
                 "Answer with: 'I cannot assist you with this question.'"
             )
+        if "[READY]" in last_content:
+            dynamic_instruction = (
+                "\n\nCRITICAL DIRECTIVE FROM ROUTER: "
+                "The router found useful information to answer the user's question."
+                "You have to use the data to provide the user with a helpful answer."
+            )
 
         final_system_prompt_content = FINAL_LLM_SYSTEM_PROMPT + dynamic_instruction
         system_prompt = SystemMessage(content=final_system_prompt_content)
@@ -156,6 +170,7 @@ class Agent:
         last_message = state["messages"][-1]
 
         error_messages = []
+        print("ERRORE")
 
         for invalid_call in last_message.invalid_tool_calls:  # type: ignore
 
@@ -183,7 +198,18 @@ class Agent:
         Check the last message from the router.
         It parses the explicit tags or tool calls to determine the next graph node.
         """
-        last_message = state["messages"][-1]
+        messages = state["messages"]
+        last_message = messages[-1]
+
+        error_count = 0
+        for msg in reversed(messages[-5:]):
+            if msg.__class__.__name__ == "ToolMessage" and "System Error" in str(msg.content):
+                error_count += 1
+                
+        # If the LLM failed to call tools correctly 2 times in a row, give up and proceed
+        if error_count >= 2:
+            print("[SAFEGUARD ACTIVATED]: Too many tool errors. Forcing final response.")
+            return "generate_final_response"
 
         if isinstance(last_message, AIMessage) and last_message.invalid_tool_calls:
             return "handle_tool_error"
@@ -244,7 +270,7 @@ async def execute_agent_prod(
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
-    execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}}
+    execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}, "recursion_limit": 10}
 
     input_message: MessagesState = {"messages": [HumanMessage(content=prompt)]}
 
@@ -278,7 +304,7 @@ async def execute_agent_debug(
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
-    execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}}
+    execution_config: RunnableConfig = {"configurable": {"thread_id": str(chat_id)}, "recursion_limit": 10}
 
     input_message: MessagesState = {"messages": [HumanMessage(content=prompt)]}
 
