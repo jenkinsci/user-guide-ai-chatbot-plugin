@@ -42,13 +42,10 @@ async def get_current_user(
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
         user_id: str | None = payload.get("sub")
 
-        print("REQUESTER: ", user_id)
-
         if user_id is None:
             raise credentials_exception
 
     except JWTError as e:
-        print(e)
         raise credentials_exception
 
     # Query PostgreSQL to find the user (without filtering by deleted_at yet)
@@ -74,8 +71,6 @@ async def get_current_user(
         db_session.add(new_provisioned_user)
         await db_session.commit()
         await db_session.refresh(new_provisioned_user)
-
-        print(f"[*] Auto-provisioned new user: {user_id}")
 
         return new_provisioned_user
 

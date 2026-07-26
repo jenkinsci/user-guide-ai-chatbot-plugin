@@ -79,9 +79,17 @@ export default function ChatList({
 
         const data = await response.json();
 
-        const newChats: ChatEntity[] = data["items"].map((el: any) => {
-          return new ChatEntity(el);
-        });
+        const newChats: ChatEntity[] = data["items"].map(
+          (el: {
+            id: number;
+            user_id: string;
+            title: string;
+            created_at: string;
+            updated_at: string;
+          }) => {
+            return new ChatEntity(el);
+          },
+        );
 
         if (newChats.length < LIMIT) {
           setHasMore(false);
@@ -107,11 +115,12 @@ export default function ChatList({
   );
 
   useEffect(() => {
-    if (open && chats.length === 0 && hasMore && !hasInitialLoadFailed) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchChats(0);
-    }
-  }, [open, chats.length, hasMore, hasInitialLoadFailed, fetchChats]);
+    const getChats = async () => {
+      await fetchChats(0);
+    };
+
+    getChats();
+  }, []);
 
   const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
     const listElement = event.currentTarget;
@@ -235,7 +244,6 @@ export default function ChatList({
           ...customScrollbar(theme),
         })}
       >
-        {/* NEW: Render a retry UI if the initial fetch failed entirely */}
         {hasInitialLoadFailed && sortedChats.length === 0 ? (
           <Box
             sx={{

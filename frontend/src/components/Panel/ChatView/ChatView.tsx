@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { ChatPlaceholder } from "./ChatPlaceholder/ChatPlaceholder";
 import ChatContent from "./ChatContent/ChatContent";
 import ChatFooter from "./ChatFooter/ChatFooter";
@@ -30,67 +30,93 @@ export default function ChatView({
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fetchMessages = async () => {
-    setLoading(true);
+  const skipResetRef = useRef(false);
 
-    try {
-      const response = await apiCall({
-        method: "GET",
-        path: `chats/${activeChatId}?limit=${QA_PAIR_LIMIT}&offset=${offset}`,
-      });
+  const fetchMessages = useCallback(
+    async (pairOffset: number) => {
+      setLoading(true);
 
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
+      try {
+        const response = await apiCall({
+          method: "GET",
+          path: `chats/${activeChatId}?limit=${QA_PAIR_LIMIT}&offset=${pairOffset}`,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const newMessages = data["items"]
+          .map(
+            (el: {
+              id: number;
+              chat_id: number;
+              created_at: string;
+              question: { id: number; content: string; created_at: string };
+              answer?: { id: number; content: string; created_at: string };
+            }) => new QAPairEntity(el),
+          )
+          .reverse();
+
+        if (newMessages.length < QA_PAIR_LIMIT) {
+          setHasMoreOlder(false);
+        }
+
+        setOffset((old) => old + QA_PAIR_LIMIT);
+
+        setMessages((old) => {
+          const newState = [...newMessages, ...old];
+          return newState;
+        });
+      } catch (error) {
+        console.error("Failed to fetch older messages:", error);
+        setErrorMessage("Failed to load chat history. Please try again.");
+      } finally {
+        setLoading(false);
       }
+    },
+    [activeChatId],
+  );
 
-      const data = await response.json();
-
-      const newMessages = data["items"]
-        .map((el: any) => new QAPairEntity(el))
-        .reverse();
-
-      if (newMessages.length < QA_PAIR_LIMIT) {
-        setHasMoreOlder(false);
-      }
-
-      setOffset((old) => old + QA_PAIR_LIMIT);
-
-      setMessages((old) => {
-        const newState = [...newMessages, ...old];
-        return newState;
-      });
-    } catch (error) {
-      console.error("Failed to fetch older messages:", error);
-      setErrorMessage("Failed to load chat history. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onLoadOlder = () => fetchMessages();
+  const onLoadOlder = () => fetchMessages(offset);
 
   useEffect(() => {
-    if (!isBotAnswering) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!activeChatId) {
       setMessages([]);
       setOffset(0);
       setHasMoreOlder(true);
+      return;
     }
 
-    if (activeChatId && hasMoreOlder) {
-      fetchMessages();
+    if (skipResetRef.current) {
+      skipResetRef.current = false;
+      return;
     }
+
+    const initialFetch = async () => {
+      setMessages([]);
+      setOffset(0);
+      setHasMoreOlder(true);
+      await fetchMessages(0);
+    };
+
+    initialFetch();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeChatId]);
 
-  const createChat = async (prompt: string) => {
+  const createChat = async (title: string) => {
+    skipResetRef.current = true; // Alziamo la bandierina protettiva
     setHasMoreOlder(false);
+    setMessages([]); // Svuotiamo preventivamente lo stato
 
     const response = await apiCall({
       method: "POST",
       path: "chats/",
       payload: {
-        title: prompt.length > 80 ? prompt.slice(0, 80) + "..." : prompt,
+        title: title.length > 80 ? title.slice(0, 80) + "..." : title,
       },
     });
 
@@ -201,10 +227,18 @@ export default function ChatView({
 
               setMessages((prev) => {
                 const updatedMessages = [...prev];
-                const targetIndex = updatedMessages.length - 1;
+
+                // CRUCIAL FIX: Troviamo l'indice in base all'ID univoco, non all'ultima posizione
+                const targetIndex = updatedMessages.findIndex(
+                  (m) => m.id === tempQaId || m.id === actualQaPairId,
+                );
+
+                // Controllo di sicurezza che salva l'app dai crash se l'array è vuoto o il messaggio non esiste
+                if (targetIndex === -1) return updatedMessages;
+
                 const oldMessage = updatedMessages[targetIndex];
 
-                const updatedAnswer = oldMessage.answer
+                const updatedAnswer = oldMessage?.answer
                   ? {
                       ...oldMessage.answer,
                       content: oldMessage.answer.content + newContent,
@@ -272,6 +306,32 @@ export default function ChatView({
     await onSendMessage(question.content, snapshot);
   };
 
+  const onUploadContext = async () => {
+    try {
+      let newChatId;
+      if (!activeChatId) {
+        const rootElement = document.getElementById("jenkins-ai-chatbot-root");
+        const currentPageName =
+          rootElement?.getAttribute("data-current-screen") || "";
+        newChatId = await createChat("Debugging in " + currentPageName);
+      }
+
+      const chatId = newChatId || activeChatId;
+
+      const response = await apiCall({
+        method: "POST",
+        path: `context/${chatId}`,
+        payload: {},
+      });
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Failed to upload context. Please try again.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleCloseError = () => {
     setErrorMessage(null);
   };
@@ -299,7 +359,9 @@ export default function ChatView({
         />
       )}
       <ChatFooter
+        activeChatId={activeChatId}
         onSendMessage={(prompt) => onSendMessage(prompt)}
+        onUploadContext={onUploadContext}
         inputValue={inputValue}
         setInputValue={setInputValue}
       />

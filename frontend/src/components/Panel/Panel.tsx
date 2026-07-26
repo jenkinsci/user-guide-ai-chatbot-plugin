@@ -33,7 +33,6 @@ export default function Panel({
   };
 
   const handleSelectChat = (chat: ChatEntity) => {
-    console.log("SELECTED CHAT: " + chat.id);
     setActiveChatId(chat.id);
     setIsListOpen(false);
   };

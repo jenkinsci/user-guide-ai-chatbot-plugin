@@ -36,15 +36,20 @@ export default function ChatContent({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const distanceFromBottomRef = useRef<number | null>(null);
-  const hasScrolledToBottomInitially = useRef(false);
+
+  const wasEmptyRef = useRef(true);
 
   const [visibleDate, setVisibleDate] = useState<string | null>(null);
   const [isDateBadgeVisible, setIsDateBadgeVisible] = useState(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!visibleDate && messages.length > 0) {
+    const editVisibleDate = async () => {
       setVisibleDate(formatGroupDate(messages[0].createdAt));
+    };
+
+    if (!visibleDate && messages.length > 0) {
+      editVisibleDate();
     }
   }, [messages, visibleDate]);
 
@@ -103,9 +108,14 @@ export default function ChatContent({
     const container = containerRef.current;
     if (!container) return;
 
-    if (!hasScrolledToBottomInitially.current && messages.length > 0) {
+    if (messages.length === 0) {
+      wasEmptyRef.current = true;
+      return;
+    }
+
+    if (wasEmptyRef.current && messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      hasScrolledToBottomInitially.current = true;
+      wasEmptyRef.current = false;
       return;
     }
 
