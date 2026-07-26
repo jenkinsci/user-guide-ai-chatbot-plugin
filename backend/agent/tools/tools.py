@@ -15,6 +15,7 @@ import re
 import asyncio
 
 ENABLE_RERANKING = get_env("ENABLE_RERANKING")
+CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
 
 
 async def get_build_logs(
@@ -85,16 +86,7 @@ async def fetch_context_from_db(chat_id: int, db_session: AsyncSession) -> dict:
     return {}
 
 
-CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
-import re
-from typing import Literal
-from langchain_core.documents import Document
-
-# Define the pattern as a constant
-CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
-
-
-def retrieve_chunk_context(
+async def retrieve_chunk_context(
     chunk: Document,
     retrieval_type: Literal["window", "parent"],
     useful_cb: tuple[str, int] | None,
@@ -310,7 +302,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
                 if data_source == "discourse_topics" or data_source == "reddit_threads"
                 else "window"
             )
-            final_text, _ = retrieve_chunk_context(
+            final_text, _ = await retrieve_chunk_context(
                 v, retrieval_type, useful_cb=cb_useful
             )
 

@@ -86,7 +86,7 @@ class Agent:
         self.checkpointer = checkpointer
         self.tools = get_tool_list(chat_id, context, prompt)
 
-    def router_node(self, state: MessagesState) -> dict:
+    async def router_node(self, state: MessagesState) -> dict:
         """
         The Router reads the conversation, generates a structured decision,
         and we manually convert that decision into a proper LangChain ToolCall.
@@ -172,7 +172,6 @@ class Agent:
         last_message = state["messages"][-1]
 
         error_messages = []
-        print("ERRORE")
 
         for invalid_call in last_message.invalid_tool_calls:  # type: ignore
 
