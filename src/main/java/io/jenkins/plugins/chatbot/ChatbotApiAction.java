@@ -224,7 +224,7 @@ public class ChatbotApiAction implements RootAction {
         agentStats.put("onlineAgents", onlineAgents);
         agentStats.put("offlineAgents", offlineAgents);
         rootNode.put("agentStats", agentStats);
-        System.out.println(rootNode);
+        // System.out.println(rootNode);
     }
 
     /**
@@ -279,7 +279,7 @@ public class ChatbotApiAction implements RootAction {
         }
 
         rootNode.put("jobDetails", jobDetails);
-        System.out.println(jobDetails);
+        // System.out.println(jobDetails);
     }
 
     /**
@@ -381,7 +381,7 @@ public class ChatbotApiAction implements RootAction {
         }
 
         rootNode.put("buildDetails", buildDetails);
-        System.out.println(buildDetails);
+        // System.out.println(buildDetails);
     }
 
     /**

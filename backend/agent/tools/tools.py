@@ -32,8 +32,6 @@ async def get_build_logs(
             content = getattr(doc, "page_content", str(doc))
             formatted_logs.append(f"--- LOG CHUNK {index + 1} ---\n{content}")
 
-        print(formatted_logs)
-
         return "\n\n".join(formatted_logs)
 
     except Exception as e:
