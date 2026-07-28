@@ -104,12 +104,14 @@ if __name__ == "__main__":
 
     print(f"Executing with {CONTEXTUAL_LLM_MODEL_NAME}\n")
 
-    result = asyncio.run(contextualize_chunk(
-        parent_document=sample_document,
-        target_chunk=sample_target,
-        llm_client=chat_model,
-        provider_name=CONTEXTUAL_LLM_PROVIDER,
-    ))
+    result = asyncio.run(
+        contextualize_chunk(
+            parent_document=sample_document,
+            target_chunk=sample_target,
+            llm_client=chat_model,
+            provider_name=CONTEXTUAL_LLM_PROVIDER,
+        )
+    )
 
     print("--- CONTEXTUALIZED CHUNK ---")
     print(result)
