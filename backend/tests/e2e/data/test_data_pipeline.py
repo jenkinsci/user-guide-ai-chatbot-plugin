@@ -5,7 +5,6 @@ from tests.mock_data.mock_collector_output_data import (
     COLLECTOR_OUTPUT_JENKINS_DOCS,
 )
 from pathlib import Path
-from data.collection.collectors import start_collectors
 from data.preprocessing.processors import start_processors
 from data.formatting.formatters import start_formatters
 from data.chunking.chunker import start_chunker
@@ -13,7 +12,7 @@ from data.models import DataSource
 import json
 
 
-def test_data_pipeline(tmp_path: Path):
+async def test_data_pipeline(tmp_path: Path):
     SOURCES = [
         DataSource.JENKINS_DOCS,
         DataSource.PLUGIN_DOCS,
@@ -45,7 +44,7 @@ def test_data_pipeline(tmp_path: Path):
     start_formatters(SOURCES, output_dir)
 
     # Chunking Phase
-    start_chunker(SOURCES, output_dir)
+    await start_chunker(SOURCES, output_dir, test=True)
 
     # Verifying outputs (chunks)
     chunks_dir = output_dir / "chunks"

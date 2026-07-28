@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional, Dict, Any
 from langchain_core.messages import ToolCall
 from .prompts import ROUTER_SYSTEM_PROMPT, FINAL_LLM_SYSTEM_PROMPT
-from .utils import get_llm_client
+from llm_client import get_llm_client
 import uuid
 
 DEBUG_MODE = get_env("DEBUG_MODE").upper() == "TRUE"

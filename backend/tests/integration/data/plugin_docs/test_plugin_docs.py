@@ -12,7 +12,7 @@ from tests.integration.data.utils import ephemeral_vector_db
 from data.tools.common import write_json_file
 
 
-def test_plugin_docs(tmp_path: Path, ephemeral_vector_db: QdrantVectorStore):
+async def test_plugin_docs(tmp_path: Path, ephemeral_vector_db: QdrantVectorStore):
     SOURCE = DataSource.PLUGIN_DOCS
 
     # Setup (MOCKED Collection Phase)
@@ -34,7 +34,7 @@ def test_plugin_docs(tmp_path: Path, ephemeral_vector_db: QdrantVectorStore):
     assert (output_dir / "documents" / "code_blocks").exists(), "No codeblocks found"
 
     # Chunking Phase
-    start_chunker([SOURCE], output_dir)
+    await start_chunker([SOURCE], output_dir, test=True)
     source_dir = output_dir / "chunks" / SOURCE.value
     assert source_dir.exists(), "Chunking failed"
     chunk_files = list(source_dir.iterdir())

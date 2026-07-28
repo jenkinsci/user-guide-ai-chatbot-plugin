@@ -1,9 +1,3 @@
-from langchain_openai import ChatOpenAI
-from langchain_groq import ChatGroq
-from langchain_anthropic import ChatAnthropic
-from langchain_ollama import ChatOllama
-from langchain_core.language_models.chat_models import BaseChatModel
-from pydantic import SecretStr
 from langchain_core.documents import Document
 from qdrant_client.conversions.common_types import Record
 from difflib import SequenceMatcher
@@ -53,45 +47,14 @@ def remove_chunk_overlap(chunks: list[str]) -> str:
     return reconstructed_text
 
 
-def get_llm_client(
-    provider: str,
-    model_name: str,
-    api_key: str = "",
-    base_url: str = "",
-    temperature: float = 0.0,
-) -> BaseChatModel:
-    """
-    Factory function to initialize the correct LLM client based on the provider.
-    All returned objects inherit from BaseChatModel, making them fully interchangeable
-    inside LangGraph.
-    """
-    provider = provider.lower()
+def remove_chunk_context(chunks: list[Document]) -> list[Document]:
+    """Remove context from each chunks (Contextual Retrieval)"""
 
-    if provider == "openai":
-        return ChatOpenAI(
-            model=model_name, api_key=SecretStr(api_key), temperature=temperature
-        )
+    CONTEXT_CHUNK_SEPARATOR = "===CR==="
 
-    elif provider == "groq":
-        return ChatGroq(
-            model=model_name, api_key=SecretStr(api_key), temperature=temperature
-        )
+    for c in chunks:
+        content_list = c.page_content.split(CONTEXT_CHUNK_SEPARATOR)
+        if len(content_list) > 0:
+            c.page_content = content_list[1]
 
-    elif provider == "ollama":
-        return ChatOllama(
-            model=model_name,
-            base_url=base_url,
-            temperature=temperature,
-        )
-
-    elif provider == "anthropic":
-        return ChatAnthropic(
-            model_name=model_name,
-            api_key=SecretStr(api_key),
-            temperature=temperature,
-            timeout=60,
-            stop=[],
-        )
-
-    else:
-        raise ValueError(f"Unsupported AI provider: {provider}")
+    return chunks

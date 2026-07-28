@@ -7,18 +7,68 @@ from pathlib import Path
 import os
 from uuid import uuid5, NAMESPACE_DNS
 import re
+from typing import List
+from .contextual_retrieval import contextualize_chunk
+from manage_env import get_env
+from dotenv import load_dotenv
+import asyncio
+from llm_client import get_llm_client
+
+load_dotenv()
+
 
 CHUNK_ID_TEMPLATE = "{}_C_{}"
 
 CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
 PLACEHOLDER_TEMPLATE = "[[CODE_BLOCK_{}]]"
 
+ENABLE_CONTEXTUAL_RETRIEVAL = get_env("ENABLE_CONTEXTUAL_RETRIEVAL").lower() == "true"
+CONTEXTUAL_LLM_PROVIDER = get_env("CONTEXTUAL_LLM_PROVIDER")
+CONTEXTUAL_LLM_MODEL_NAME = get_env("CONTEXTUAL_LLM_MODEL_NAME")
+CONTEXTUAL_LLM_BASE_URL = get_env("CONTEXTUAL_LLM_BASE_URL")
+CONTEXTUAL_LLM_API_KEY = get_env("CONTEXTUAL_LLM_API_KEY")
+CONTEXTUAL_LLM_TEMPERATURE = get_env("CONTEXTUAL_LLM_TEMPERATURE")
+
+
+async def contextualize_chunk_list(
+    chunk_list: List[Document], output_dir: Path, data_source: str
+) -> List[Document]:
+    """
+    Generates specific context for each chunk in chunk_list.
+    """
+    documents_dir = output_dir / "documents"
+    SOURCE_DIR = documents_dir / data_source
+    chunks_len = len(chunk_list)
+    llm_client = get_llm_client(
+        provider=CONTEXTUAL_LLM_PROVIDER,
+        temperature=float(CONTEXTUAL_LLM_TEMPERATURE),
+        api_key=CONTEXTUAL_LLM_API_KEY,
+        base_url=CONTEXTUAL_LLM_BASE_URL,
+        model_name=CONTEXTUAL_LLM_MODEL_NAME,
+    )
+
+    for i, c in enumerate(chunk_list):
+        entire_document = read_json_file(SOURCE_DIR / f"{c.metadata["parent_id"]}.json")
+
+        new_chunk_content = await contextualize_chunk(
+            entire_document["page_content"],
+            c.page_content,
+            llm_client,
+            CONTEXTUAL_LLM_PROVIDER,
+        )
+
+        if new_chunk_content:
+            c.page_content = new_chunk_content
+        print(i, chunks_len)
+
+    return chunk_list
+
 
 def bind_chunks_to_code_blocks(
     chunks: list[Document], doc_id: str, code_blocks_dir: Path
 ) -> list[Document]:
     """
-    Bind each chunk to its specific code blocks by placing its ID inside the corresponding code block metadata.
+    Bind each chunk to its specific code blocks document by placing its ID inside the corresponding code block metadata.
 
     Returns:
         list[Document]: Chunk list
@@ -160,7 +210,7 @@ def process_doc_list(
     return processed_chunks, chunk_ids
 
 
-def chunker(sources: list[DataSource], output_dir: Path):
+async def chunker(sources: list[DataSource], output_dir: Path, test: bool):
     """Start embedder."""
 
     DOCUMENTS_DIR = output_dir / "documents"
@@ -190,15 +240,22 @@ def chunker(sources: list[DataSource], output_dir: Path):
             continue
 
         chunks, chunk_ids = process_doc_list(documents, source, CODE_BLOCKS_DIR)
+        updated_chunks = chunks
+
+        if ENABLE_CONTEXTUAL_RETRIEVAL and not test:
+            print("CONTEXT PHASE")
+            updated_chunks = await contextualize_chunk_list(chunks, OUTPUT_DIR, source)
 
         for i in range(0, len(chunk_ids)):
             path = CHUNKS_DIR / f"{source}/{chunk_ids[i]}.json"
-            write_json_file(path, chunks[i].model_dump())
+            write_json_file(path, updated_chunks[i].model_dump())
 
 
-def start_chunker(sources: list[DataSource], output_dir: Path):
+async def start_chunker(
+    sources: list[DataSource], output_dir: Path, test: bool = False
+):
     print("--------- START CHUNKING PHASE ---------")
-    chunker(sources, output_dir)
+    await chunker(sources, output_dir, test)
     print("--------- END CHUNKING PHASE ---------")
 
 
@@ -206,12 +263,14 @@ if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     OUTPUT_DIR = Path(SCRIPT_DIR, "..", "output")
 
-    start_chunker(
-        [
-            DataSource.JENKINS_DOCS,
-            DataSource.PLUGIN_DOCS,
-            DataSource.DISCOURSE_TOPICS,
-            DataSource.REDDIT_THREADS,
-        ],
-        OUTPUT_DIR,
+    asyncio.run(
+        start_chunker(
+            [
+                DataSource.JENKINS_DOCS,
+                DataSource.PLUGIN_DOCS,
+                DataSource.DISCOURSE_TOPICS,
+                DataSource.REDDIT_THREADS,
+            ],
+            OUTPUT_DIR,
+        )
     )

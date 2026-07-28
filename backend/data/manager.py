@@ -3,7 +3,7 @@ from .preprocessing.processors import start_processors
 from .formatting.formatters import start_formatters
 from .chunking.chunker import start_chunker
 from .embedding.embedder import start_embedder
-
+import inspect
 import os
 from datetime import datetime
 from pathlib import Path
@@ -91,7 +91,7 @@ def collector_menu() -> list[DataSource]:
     return list(selected_sources)
 
 
-def start_data_pipeline(selected_sources: list[DataSource], script_dir: Path):
+async def start_data_pipeline(selected_sources: list[DataSource], script_dir: Path):
     if not selected_sources:
         print("---- NO DATA SOURCE SELECTED ----")
         return
@@ -117,8 +117,10 @@ def start_data_pipeline(selected_sources: list[DataSource], script_dir: Path):
         phase_obj["name"] = phase.value
         phase_obj["start_date"] = datetime.now()
 
-        # Execute the specific phase function
-        fun(selected_sources, output_dir)
+        if inspect.iscoroutinefunction(fun):
+            await fun(selected_sources, output_dir)
+        else:
+            fun(selected_sources, output_dir)
 
         phase_obj["end_date"] = datetime.now()
         manager_logs["phases"].append(phase_obj)

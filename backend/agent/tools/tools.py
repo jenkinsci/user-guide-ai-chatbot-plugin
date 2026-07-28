@@ -8,11 +8,14 @@ from ..reranker import get_reranked_documents
 from manage_env import get_env
 from langchain_core.documents import Document
 from qdrant_client import models
-from typing import List, Literal, cast
+from typing import Literal
 from vectordb.qdrant import get_with_metadata
-from ..utils import qdrant_record_to_langchain_doc
+from ..utils import (
+    qdrant_record_to_langchain_doc,
+    remove_chunk_context,
+    remove_chunk_overlap,
+)
 import re
-import asyncio
 
 ENABLE_RERANKING = get_env("ENABLE_RERANKING")
 CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
@@ -94,6 +97,7 @@ async def retrieve_chunk_context(
     parent_id = chunk.metadata["parent_id"]
     chunk_index = chunk.metadata["chunk_index"]
     total_chunks = chunk.metadata["total_chunks"]
+    data_source = chunk.metadata["data_source"]
 
     payload_filter: models.Filter | None = None
 
@@ -131,8 +135,15 @@ async def retrieve_chunk_context(
     # Sort documents sequentially by chunk_index
     chunks = sorted(chunks, key=lambda x: x.metadata["chunk_index"])
 
-    # Merge all text chunks into a single string
-    merged_text = "\n".join([c.page_content for c in chunks])
+    # Remove context applied for Contextual Retrieval
+    chunks = remove_chunk_context(chunks)
+
+    # Merge all text chunks into a single string and remove overlaps
+    merged_text = ""
+    if data_source == "jenkins_docs" or data_source == "plugin_docs":
+        merged_text = remove_chunk_overlap([c.page_content for c in chunks])
+    else:
+        merged_text = "\n".join([c.page_content for c in chunks])
 
     # 3. Aggregate all code block IDs to perform a single DB query
     all_cb_ids: set[str] = set()
