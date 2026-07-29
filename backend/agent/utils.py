@@ -53,8 +53,6 @@ def remove_chunk_context(chunks: list[Document]) -> list[Document]:
     CONTEXT_CHUNK_SEPARATOR = "===CR==="
 
     for c in chunks:
-        content_list = c.page_content.split(CONTEXT_CHUNK_SEPARATOR)
-        if len(content_list) > 0:
-            c.page_content = content_list[1]
+        c.page_content = c.page_content.split(CONTEXT_CHUNK_SEPARATOR, 1)[-1]
 
     return chunks

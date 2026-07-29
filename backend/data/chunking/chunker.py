@@ -243,8 +243,7 @@ async def chunker(sources: list[DataSource], output_dir: Path, test: bool):
         updated_chunks = chunks
 
         if ENABLE_CONTEXTUAL_RETRIEVAL and not test:
-            print("CONTEXT PHASE")
-            updated_chunks = await contextualize_chunk_list(chunks, OUTPUT_DIR, source)
+            updated_chunks = await contextualize_chunk_list(chunks, output_dir, source)
 
         for i in range(0, len(chunk_ids)):
             path = CHUNKS_DIR / f"{source}/{chunk_ids[i]}.json"
