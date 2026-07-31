@@ -92,6 +92,24 @@ class Agent:
         and we manually convert that decision into a proper LangChain ToolCall.
         """
         messages = state["messages"]
+
+        if messages:
+            last_msg = messages[-1]
+            
+            if isinstance(last_msg, ToolMessage):
+                content_upper = str(last_msg.content).upper()
+                
+                if "ERROR" in content_upper or "NOT FOUND" in content_upper or "MISSING" in content_upper:
+                    print(f"\n[CIRCUIT BREAKER] Tool failed ({last_msg.name}). Bypassing Router LLM to prevent loops.")
+                    
+                    fake_thought = "MISSING_CONTEXT: The tool returned an error or the context is missing. I must stop trying and alert the final agent."
+                    
+                    ai_msg = AIMessage(
+                        content=f"<thought>\n{fake_thought}\n</thought>\n[READY]"
+                    )
+                    return {"messages": [ai_msg]}
+
+
         system_prompt = SystemMessage(content=ROUTER_SYSTEM_PROMPT)
         router_input = [system_prompt] + messages
 
@@ -141,15 +159,21 @@ class Agent:
 
         dynamic_instruction = ""
 
-        if "[OUT OF SCOPE]" in last_content:
+        if "MISSING_CONTEXT" in last_content:
+            dynamic_instruction = (
+                "\n\nCRITICAL DIRECTIVE FROM ROUTER: "
+                "The required logs or context are missing. "
+                "You MUST answer EXACTLY with: 'I don't have context information about this, please upload the context and try again.'"
+                "Do NOT attempt to guess the solution."
+            )
+        elif "[OUT OF SCOPE]" in last_content:
             dynamic_instruction = (
                 "\n\nCRITICAL DIRECTIVE FROM ROUTER: "
                 "The user query is strictly OUT OF SCOPE. "
-                "You MUST politely decline to answer in a single sentence."
-                "Do NOT attempt to solve the issue or provide a tutorial."
+                "You MUST politely decline to answer in a single sentence. "
                 "Answer with: 'I cannot assist you with this question.'"
             )
-        if "[READY]" in last_content:
+        elif "[READY]" in last_content:
             dynamic_instruction = (
                 "\n\nCRITICAL DIRECTIVE FROM ROUTER: "
                 "The router found useful information to answer the user's question."

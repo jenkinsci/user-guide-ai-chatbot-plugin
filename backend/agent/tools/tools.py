@@ -246,7 +246,6 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
     Returns a dynamic list of tools based on the available context.
     Avoids redundant database queries by using the pre-fetched context.
     """
-    available_tools = []
 
     @tool
     async def fetch_from_vectordb(query: str) -> str:
@@ -322,11 +321,6 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         print("OUTPUT: ", output)
         return output
 
-    available_tools.append(fetch_from_vectordb)
-
-    if not context:
-        return available_tools
-
     @tool
     async def get_general_jenkins_context() -> str:
         """
@@ -334,6 +328,9 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         Use this tool to find out the Jenkins version, the master configuration,
         system messages, and the current screen the user is viewing.
         """
+        if not context:
+            return "Error: Missing context or logs not found."
+        
         general_info = {
             "current_screen": context.get("current_screen", "Unknown"),
             "root_url": context.get("root_url", "Unknown"),
@@ -344,52 +341,52 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         }
         return json.dumps(general_info, indent=2)
 
-    available_tools.append(get_general_jenkins_context)
+    @tool
+    async def get_installed_plugin_list() -> str:
+        """
+        Retrieve the complete list of plugins currently installed on the user's Jenkins instance.
+        Use this tool to verify if a specific plugin is available or to check plugin versions
+        before suggesting a solution that requires them.
+        """
 
-    if context.get("active_plugins"):
+        if not context.get("active_plugins"):
+            return "Error: Missing context or logs not found."
 
-        @tool
-        async def get_installed_plugin_list() -> str:
-            """
-            Retrieve the complete list of plugins currently installed on the user's Jenkins instance.
-            Use this tool to verify if a specific plugin is available or to check plugin versions
-            before suggesting a solution that requires them.
-            """
-            return json.dumps(context["active_plugins"], indent=2)
+        return json.dumps(context["active_plugins"], indent=2)
 
-        available_tools.append(get_installed_plugin_list)
 
-    if context.get("job_details"):
+    @tool
+    async def get_job_details() -> str:
+        """
+        Retrieve the configuration details of the specific Jenkins Job/Pipeline the user is currently looking at.
+        Use this tool to inspect the pipeline definition, repository URLs, and config.xml.
+        Do NOT use this tool to find execution logs (use get_build_details instead).
+        """
+        if not context.get("job_details"):
+            return "Error: Missing context or logs not found."
 
-        @tool
-        async def get_job_details() -> str:
-            """
-            Retrieve the configuration details of the specific Jenkins Job/Pipeline the user is currently looking at.
-            Use this tool to inspect the pipeline definition, repository URLs, and config.xml.
-            Do NOT use this tool to find execution logs (use get_build_details instead).
-            """
-            return json.dumps(context["job_details"], indent=2)
 
-        available_tools.append(get_job_details)
+        return json.dumps(context["job_details"], indent=2)
 
-    if context.get("build_details"):
 
-        @tool
-        async def get_build_details(log_search_query: str) -> str:
-            """
-            Retrieve the execution details of the current Jenkins build (status, timestamp, duration) the user is currently looking at
-            AND search its console logs for specific errors or keywords.
+    @tool
+    async def get_build_details(log_search_query: str) -> str:
+        """
+        Retrieve the execution details of the current Jenkins build (status, timestamp, duration) the user is currently looking at
+        AND search its console logs for specific errors or keywords.
 
-            Args:
-                log_search_query: A specific keyword or error type to search within the build logs
-                                  (e.g., "Exception", "NullPointer", "npm ERR!", "timeout").
-                                  If you need to search for errors you can pass "error".
-            """
-            logs = await get_build_logs(chat_id, log_search_query)
+        Args:
+            log_search_query: A specific keyword or error type to search within the build logs
+                                (e.g., "Exception", "NullPointer", "npm ERR!", "timeout").
+                                If you need to search for errors you can pass "error".
+        """
+        if not context.get("build_details"):
+            return "Error: Missing context or logs not found."
 
-            result = {"build_details": context["build_details"], "build_logs": logs}
-            return json.dumps(result, indent=2)
+        logs = await get_build_logs(chat_id, log_search_query)
 
-        available_tools.append(get_build_details)
+        result = {"build_details": context["build_details"], "build_logs": logs}
+        return json.dumps(result, indent=2)
 
-    return available_tools
+
+    return [fetch_from_vectordb ,get_general_jenkins_context, get_installed_plugin_list,get_job_details, get_build_details]
