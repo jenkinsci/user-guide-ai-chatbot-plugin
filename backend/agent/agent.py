@@ -75,7 +75,7 @@ class Agent:
         self.checkpointer = checkpointer
         self.tools = get_tool_list(chat_id, context)
 
-    def router_node(self, state: MessagesState) -> dict:
+    async def router_node(self, state: MessagesState) -> dict:
         """
         The Router reads the conversation, generates a structured decision,
         and we manually convert that decision into a proper LangChain ToolCall.
@@ -84,7 +84,7 @@ class Agent:
         system_prompt = SystemMessage(content=ROUTER_SYSTEM_PROMPT)
         router_input = [system_prompt] + messages
 
-        decision: RouterDecision = self.structured_router.invoke(router_input)  # type: ignore
+        decision: RouterDecision = await self.structured_router.ainvoke(router_input)  # type: ignore
         result: dict = {}
 
         if decision.action == "TOOL_CALL" and decision.tool_name:
@@ -114,7 +114,7 @@ class Agent:
 
         return result
 
-    def generate_final_response_node(
+    async def generate_final_response_node(
         self, state: MessagesState, config: RunnableConfig
     ) -> dict:
         """
@@ -143,11 +143,11 @@ class Agent:
         system_prompt = SystemMessage(content=final_system_prompt_content)
         generation_input = [system_prompt] + filtered_messages
 
-        final_response = self.final_llm.invoke(generation_input, config=config)
+        final_response = await self.final_llm.ainvoke(generation_input, config=config)
 
         return {"messages": [final_response]}
 
-    def handle_tool_error_node(self, state: MessagesState) -> dict:
+    async def handle_tool_error_node(self, state: MessagesState) -> dict:
         """
         Catch malformed tool calls (e.g., bad JSON syntax) and return a message
         instructing the LLM to fix the syntax and try again.
@@ -174,7 +174,7 @@ class Agent:
 
         return {"messages": error_messages}
 
-    def router_condition(
+    async def router_condition(
         self,
         state: MessagesState,
     ) -> Literal["tools", "generate_final_response", "handle_tool_error"]:
