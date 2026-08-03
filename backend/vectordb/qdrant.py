@@ -12,9 +12,9 @@ from langchain_core.documents import Document
 load_dotenv()
 
 QDRANT_COLLECTION_NAME = get_env("QDRANT_COLLECTION_NAME")
+TTL_QDRANT_CACHE = 3600
 
-
-@ttl_cache(maxsize=1, ttl=3540)
+@ttl_cache(maxsize=1, ttl=TTL_QDRANT_CACHE-1)
 def get_qdrant_client():
     """
     Returns a Qdrant client. Result is cached for 3540 seconds.

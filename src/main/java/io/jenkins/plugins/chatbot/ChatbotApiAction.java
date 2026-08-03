@@ -2,10 +2,13 @@ package io.jenkins.plugins.chatbot;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.JWTVerifier;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
@@ -24,8 +27,18 @@ import jenkins.scm.RunWithSCM;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
+
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.AbstractBuild;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
+
 
 @Extension
 public class ChatbotApiAction implements RootAction {
@@ -543,4 +556,249 @@ public class ChatbotApiAction implements RootAction {
 
         proxyConnection.disconnect();
     }
+
+
+    /**
+     * Helper method to validate the JWT from the Authorization header
+     * using the shared secret stored in the Jenkins global configuration.
+     */
+    private boolean isAuthorized(StaplerRequest2 req) {
+        String authHeader = req.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return false;
+        }
+
+        String token = authHeader.substring(7); // Remove "Bearer " prefix
+
+        try {
+            // Retrieve the shared secret using the plugin's global configuration
+            ChatbotGlobalConfig pluginConfig = ChatbotGlobalConfig.get();
+            if (pluginConfig == null) {
+                return false; // Global configuration is not available
+            }
+
+            // Retrieve the credentials based on the configuration
+            StringCredentials credentials = getCredentials(pluginConfig);
+            if (credentials == null || credentials.getSecret() == null) {
+                return false; // Credentials are not configured or missing
+            }
+
+            String sharedSecret = credentials.getSecret().getPlainText();
+            if (sharedSecret == null || sharedSecret.isEmpty()) {
+                return false; // Secret is empty
+            }
+
+            // Verify the JWT signature
+            Algorithm algorithm = Algorithm.HMAC256(sharedSecret);
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer("fastapi-backend")
+                    .build();
+
+            // If verification fails or token is expired, this throws a JWTVerificationException
+            verifier.verify(token);
+            return true;
+
+        } catch (JWTVerificationException exception) {
+            // Invalid signature, expired token, or missing claims
+            return false;
+        } catch (Exception e) {
+            // Catching any unexpected exceptions during credential retrieval to avoid server crashes
+            return false;
+        }
+    }
+
+
+    /**
+     * Helper method to retrieve a specific Run based on job name and build number.
+     *
+     * @param jobName     The full name of the Jenkins job
+     * @param buildNumber The build number
+     * @return The Run object, or null if the job or build does not exist
+     */
+    private Run<?, ?> getRunFromParameters(String jobName, int buildNumber) {
+        if (jobName == null || jobName.isEmpty()) {
+            return null;
+        }
+
+        Jenkins jenkins = Jenkins.get();
+        Job<?, ?> job = jenkins.getItemByFullName(jobName, Job.class);
+
+        if (job == null) {
+            return null;
+        }
+
+        return job.getBuildByNumber(buildNumber);
+    }
+
+    /**
+     * Retrieves the tree of all workspaces for a specific build.
+     * Example URL: /chatbot/workspaceTree?jobName=my-pipeline&buildNumber=12
+     */
+    public void doWorkspaceTree(StaplerRequest2 req, StaplerResponse2 rsp,
+                                @QueryParameter String jobName,
+                                @QueryParameter int buildNumber) throws Exception {
+
+        // Verify Authentication
+        if (!isAuthorized(req)) {
+            rsp.sendError(401, "Unauthorized: Invalid or missing JWT token.");
+            return;
+        }
+
+        rsp.setContentType("application/json");
+
+        // Retrieve the specific build
+        Run<?, ?> run = getRunFromParameters(jobName, buildNumber);
+        if (run == null) {
+            JSONObject error = new JSONObject();
+            error.put("status", "error");
+            error.put("message", "Job or Build not found.");
+            rsp.getWriter().write(error.toString());
+            return;
+        }
+
+        // Process workspaces based on the job type
+        JSONArray workspacesList = new JSONArray();
+
+        if (run instanceof AbstractBuild) {
+            // Classic Projects (Freestyle) - Single Workspace
+            FilePath ws = ((AbstractBuild<?, ?>) run).getWorkspace();
+            if (ws != null && ws.exists()) {
+                JSONObject wsObj = new JSONObject();
+                wsObj.put("workspaceId", "ws-default");
+                wsObj.put("node", ((AbstractBuild<?, ?>) run).getBuiltOnStr());
+                wsObj.put("tree", buildDirectoryTree(ws, 3));
+                workspacesList.add(wsObj);
+            }
+        } else if (run instanceof WorkflowRun) {
+            // Pipeline - Multiple workspaces possible
+            WorkflowRun workflowRun = (WorkflowRun) run;
+            if (workflowRun.getExecution() != null) {
+                FlowGraphWalker walker = new FlowGraphWalker(workflowRun.getExecution());
+                int idCounter = 1;
+
+                for (FlowNode node : walker) {
+                    WorkspaceAction wsAction = node.getAction(WorkspaceAction.class);
+                    if (wsAction != null) {
+                        FilePath ws = wsAction.getWorkspace();
+                        if (ws != null && ws.exists()) {
+                            JSONObject wsObj = new JSONObject();
+                            wsObj.put("workspaceId", "ws-pipeline-" + idCounter);
+                            wsObj.put("node", wsAction.getNode());
+                            wsObj.put("path", wsAction.getPath());
+                            wsObj.put("tree", buildDirectoryTree(ws, 3));
+                            workspacesList.add(wsObj);
+                            idCounter++;
+                        }
+                    }
+                }
+            }
+        }
+
+        rsp.getWriter().write(workspacesList.toString());
+    }
+
+    /**
+     * Recursive function to map the folder structure (ignoring known heavy folders).
+     */
+    private JSONObject buildDirectoryTree(FilePath dir, int depth) throws Exception {
+        JSONObject node = new JSONObject();
+        node.put("name", dir.getName());
+
+        if (dir.isDirectory()) {
+            node.put("type", "directory");
+            if (depth > 0) {
+                JSONArray children = new JSONArray();
+                for (FilePath child : dir.list()) {
+                    // Ignore giant useless folders for the LLM to save tokens
+                    String childName = child.getName();
+                    if (childName.equals(".git") || childName.equals("node_modules") || childName.equals("target")) {
+                        continue;
+                    }
+                    children.add(buildDirectoryTree(child, depth - 1));
+                }
+                node.put("children", children);
+            }
+        } else {
+            node.put("type", "file");
+            node.put("size", dir.length());
+        }
+        return node;
+    }
+
+    /**
+     * Reads the content of a specific file within a specific workspace.
+     * Example URL: /chatbot/workspaceFile?jobName=my-pipeline&buildNumber=12&workspaceId=ws-pipeline-1&filePath=src/main/App.java
+     */
+    public void doWorkspaceFile(StaplerRequest2 req, StaplerResponse2 rsp,
+                                @QueryParameter String jobName,
+                                @QueryParameter int buildNumber,
+                                @QueryParameter String workspaceId,
+                                @QueryParameter String filePath) throws Exception {
+
+        // Verify Authentication
+        if (!isAuthorized(req)) {
+            rsp.sendError(401, "Unauthorized: Invalid or missing JWT token.");
+            return;
+        }
+
+        rsp.setContentType("application/json");
+        JSONObject result = new JSONObject();
+
+        // Retrieve the specific build
+        Run<?, ?> run = getRunFromParameters(jobName, buildNumber);
+        if (run == null) {
+            result.put("status", "error");
+            result.put("message", "Job or Build not found.");
+            rsp.getWriter().write(result.toString());
+            return;
+        }
+
+        FilePath targetWorkspace = null;
+
+        // Retrieves the correct workspace based on the ID provided by the backend
+        if (run instanceof AbstractBuild && "ws-default".equals(workspaceId)) {
+            targetWorkspace = ((AbstractBuild<?, ?>) run).getWorkspace();
+
+        } else if (run instanceof WorkflowRun) {
+            WorkflowRun workflowRun = (WorkflowRun) run;
+            if (workflowRun.getExecution() != null) {
+                FlowGraphWalker walker = new FlowGraphWalker(workflowRun.getExecution());
+                int idCounter = 1;
+                for (FlowNode node : walker) {
+                    WorkspaceAction wsAction = node.getAction(WorkspaceAction.class);
+                    if (wsAction != null) {
+                        if (workspaceId.equals("ws-pipeline-" + idCounter)) {
+                            targetWorkspace = wsAction.getWorkspace();
+                            break;
+                        }
+                        idCounter++;
+                    }
+                }
+            }
+        }
+
+        // Read and return the file content
+        if (targetWorkspace != null) {
+            FilePath targetFile = targetWorkspace.child(filePath);
+            if (targetFile.exists() && !targetFile.isDirectory()) {
+                // Reads the file (with a safety limit of ~50KB to avoid overloading the LLM context window)
+                String content = targetFile.readToString();
+                if (content.length() > 50000) {
+                    content = content.substring(0, 50000) + "\n\n[FILE TRUNCATED FOR SIZE LIMITS]";
+                }
+                result.put("status", "success");
+                result.put("content", content);
+            } else {
+                result.put("status", "error");
+                result.put("message", "File not found or is a directory.");
+            }
+        } else {
+            result.put("status", "error");
+            result.put("message", "Invalid or missing Workspace ID.");
+        }
+
+        rsp.getWriter().write(result.toString());
+    }
+
 }

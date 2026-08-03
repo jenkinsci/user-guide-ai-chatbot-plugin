@@ -12,8 +12,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SECRET_KEY = get_env("JWT_SECRET_KEY")
-ALGORITHM = get_env("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(get_env("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -39,7 +37,7 @@ async def get_current_user(
 
     # Decode the JWT to extract user claims
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])  # type: ignore
         user_id: str | None = payload.get("sub")
 
         if user_id is None:
@@ -75,10 +73,11 @@ async def get_current_user(
         return new_provisioned_user
 
 
-def create_access_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire_time = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+def create_access_token(payload: dict) -> str:
+    to_encode = payload.copy()
+    iat = datetime.now(timezone.utc)
+    exp = iat + timedelta(
+        minutes=5
     )
-    to_encode.update({"exp": expire_time})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    to_encode.update({"iat": iat, "exp": exp, "iss": "fastapi-backend"})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
