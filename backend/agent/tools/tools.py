@@ -438,7 +438,7 @@ if __name__ == "__main__":
                 if data_source == "discourse_topics" or data_source == "reddit_threads"
                 else "window"
             )
-            final_text, _ = retrieve_chunk_context(
+            final_text, _ = await retrieve_chunk_context(
                 v, retrieval_type, useful_cb=cb_useful
             )
 

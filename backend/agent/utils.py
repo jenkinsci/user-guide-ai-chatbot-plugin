@@ -65,18 +65,21 @@ def get_llm_client(
 
     if provider == "openai":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=model_name, api_key=SecretStr(api_key), temperature=temperature
         )
 
     elif provider == "groq":
         from langchain_groq import ChatGroq
+
         return ChatGroq(
             model=model_name, api_key=SecretStr(api_key), temperature=temperature
         )
 
     elif provider == "ollama":
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=model_name,
             base_url=base_url,
@@ -85,6 +88,7 @@ def get_llm_client(
 
     elif provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+
         return ChatAnthropic(
             model_name=model_name,
             api_key=SecretStr(api_key),
