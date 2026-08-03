@@ -1,5 +1,9 @@
 target
 
+# docs folder
+docs/html
+docs/doctrees
+
 # backend folder
 .env.prod
 .env
