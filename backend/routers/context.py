@@ -71,7 +71,7 @@ async def manage_logs(
         return True
 
     except Exception as e:
-        print(f"Failed to chunk and store logs in Qdrant.")
+        print(f"Failed to chunk and store logs in Qdrant: {e}")
         return False
 
 
@@ -146,7 +146,7 @@ async def store_context(
 
 
 @router.post(
-    "/{chat_id}/",
+    "/{chat_id}",
     response_model=schemas.ContextResponse,
     status_code=status.HTTP_202_ACCEPTED,
 )

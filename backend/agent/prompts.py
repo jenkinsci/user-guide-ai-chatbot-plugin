@@ -15,7 +15,7 @@ RULES:
 8. STRICT JSON ONLY: You must output ONLY valid JSON matching the schema. DO NOT wrap the output in Markdown blocks (like ```json). DO NOT add introductory text (like "Here is the JSON").
 
 AVAILABLE TOOLS:
-- fetch_from_vectordb (REQUIRED args: "query", "data_source")
+- fetch_from_vectordb (REQUIRED args: "query")
 - get_general_jenkins_context (args: NONE)
 - get_installed_plugin_list (args: NONE)
 - get_job_details (args: NONE)

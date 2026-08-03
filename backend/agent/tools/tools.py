@@ -14,7 +14,7 @@ from ..utils import qdrant_record_to_langchain_doc
 import re
 import asyncio
 
-ENABLE_RERANKING = get_env("ENABLE_RERANKING")
+ENABLE_RERANKING = get_env("ENABLE_RERANKING").lower() == "true"
 CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
 
 

@@ -1,7 +1,6 @@
 from vectordb.qdrant import get_vector_store
 from langchain_core.documents import Document
-from qdrant_client.http.models import models
-from langchain_core.tools import tool
+from qdrant_client.http import models
 
 
 async def hybrid_retriever(
