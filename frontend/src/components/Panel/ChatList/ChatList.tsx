@@ -119,8 +119,8 @@ export default function ChatList({
       await fetchChats(0);
     };
 
-    getChats();
-  }, []);
+    if (open && offset == 0) getChats();
+  }, [open, offset]);
 
   const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
     const listElement = event.currentTarget;

@@ -43,10 +43,13 @@ class ContextEntity(Base):
     )
 
     current_screen = Column(String(255), nullable=True)
+    root_url = Column(Text, nullable=True)
     jenkins_version = Column(String(50), nullable=True)
+    system_message = Column(Text, nullable=True)
 
-    active_plugins = Column(JSON, nullable=True)
+    agent_stats = Column(JSON, nullable=True)
     master_node = Column(JSON, nullable=True)
+    active_plugins = Column(JSON, nullable=True)
 
     job_details = Column(JSON, nullable=True)
     build_details = Column(JSON, nullable=True)
