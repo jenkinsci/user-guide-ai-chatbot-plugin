@@ -15,12 +15,11 @@ from ..utils import (
     qdrant_record_to_langchain_doc,
     remove_chunk_context,
     remove_chunk_overlap,
-    format_workspace_tree
+    format_workspace_tree,
 )
 import re
-from manage_env import get_env 
+from manage_env import get_env
 from routers.auth import create_access_token
-
 
 ENABLE_RERANKING = get_env("ENABLE_RERANKING")
 CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
@@ -246,15 +245,17 @@ async def retrieve_chunk_context(
     return final_text_with_code, list(cb_index_to_text.values())
 
 
-async def call_jenkins_api(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Union[dict, list]:
+async def call_jenkins_api(
+    endpoint: str, params: Optional[Dict[str, Any]] = None
+) -> Union[dict, list]:
     """
     Makes an asynchronous HTTP call to the Jenkins plugin using JWT authentication.
-    
+
     Args:
         chat_id: The ID of the current chat.
         endpoint: The API path (e.g., '/job/my-job/1/chatbot/workspaceTree').
         params: Optional query parameters to append to the URL.
-        
+
     Returns:
         A dictionary or list containing the JSON response from Jenkins.
     """
@@ -262,10 +263,13 @@ async def call_jenkins_api(endpoint: str, params: Optional[Dict[str, Any]] = Non
 
     if not jenkins_url:
         print("JENKINS_URL environment variable is missing!")
-        return {"status": "error", "message": "Jenkins server configuration is missing on the backend."}
+        return {
+            "status": "error",
+            "message": "Jenkins server configuration is missing on the backend.",
+        }
 
-    base_url = jenkins_url.rstrip('/')
-    endpoint_path = endpoint.lstrip('/')
+    base_url = jenkins_url.rstrip("/")
+    endpoint_path = endpoint.lstrip("/")
     full_url = f"{base_url}/{endpoint_path}"
 
     safe_params = {}
@@ -278,24 +282,30 @@ async def call_jenkins_api(endpoint: str, params: Optional[Dict[str, Any]] = Non
         jwt_token = create_access_token({})
         headers = {
             "Authorization": f"Bearer {jwt_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         async with aiohttp.ClientSession(headers=headers) as session:
             print(f"Calling Jenkins API: {full_url} with params: {safe_params}")
-            
+
             async with session.get(full_url, params=safe_params) as response:
                 response.raise_for_status()
                 return await response.json()
-                
+
     except ValueError as e:
         print(str(e))
-        return {"status": "error", "message": "Backend configuration error (JWT Secret missing)."}
-        
+        return {
+            "status": "error",
+            "message": "Backend configuration error (JWT Secret missing).",
+        }
+
     except aiohttp.ClientResponseError as e:
         print(f"HTTP Error {e.status} calling Jenkins: {e.message}")
-        return {"status": "error", "message": f"Error from Jenkins (HTTP {e.status}): {e.message}"}
-        
+        return {
+            "status": "error",
+            "message": f"Error from Jenkins (HTTP {e.status}): {e.message}",
+        }
+
     except Exception as e:
         print(f"Unexpected error in call_jenkins_api: {str(e)}")
         return {"status": "error", "message": f"Unexpected error: {str(e)}"}
@@ -390,7 +400,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         """
         if not context:
             return "Error: Missing context, tell the user to try to upload the context and try again."
-        
+
         general_info = {
             "current_screen": context.get("current_screen", "Unknown"),
             "root_url": context.get("root_url", "Unknown"),
@@ -414,7 +424,6 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
 
         return json.dumps(context["active_plugins"], indent=2)
 
-
     @tool
     async def get_job_details() -> str:
         """
@@ -425,9 +434,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         if not context.get("job_details"):
             return "Error: Missing context, tell the user to try to upload the context and try again."
 
-
         return json.dumps(context["job_details"], indent=2)
-
 
     @tool
     async def get_build_details(log_search_query: str) -> str:
@@ -448,42 +455,37 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         result = {"build_details": context["build_details"], "build_logs": logs}
         return json.dumps(result, indent=2)
 
-
     @tool
     async def get_workspace_tree() -> str:
         """
         Retrieves the directory tree of ALL workspaces associated with the current build.
         Use this to explore available files before reading their content.
-        
+
         Args:
             query: Ignored, but required by the framework.
             chat_id: The ID of the current chat.
         """
         try:
             if not context or not context.get("build_details"):
-              return "Error: Missing context, tell the user to try to upload the context and try again."
-                
+                return "Error: Missing context, tell the user to try to upload the context and try again."
+
             job_name = context["job_details"]["full_name"]
             build_number = context["build_details"]["number"]
-            
+
             response = await call_jenkins_api(
-            endpoint="/chatbot-api/workspaceTree",
-            params={
-                "jobName": job_name,
-                "buildNumber": build_number
-                }
+                endpoint="/chatbot-api/workspaceTree",
+                params={"jobName": job_name, "buildNumber": build_number},
             )
-            
+
             if isinstance(response, dict) and response.get("status") == "error":
                 return f"API Error: {response.get('message')}"
-        
-            formatted_tree = format_workspace_tree(response) # type: ignore
+
+            formatted_tree = format_workspace_tree(response)  # type: ignore
             return formatted_tree
-            
+
         except Exception as e:
             print(f"Failed to fetch workspace tree: {e}")
             return f"Error retrieving workspace tree: {str(e)}"
-
 
     @tool
     async def get_workspace_file(file_path: str, workspace_id: str) -> str:
@@ -491,7 +493,7 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
         Reads the content of a specific file within a Jenkins workspace.
         Do NOT call this tool until you have called get_workspace_tree().
         You MUST call get_workspace_tree() tool first to obtain the correct 'workspace_id' and exact 'file_path'.
-        
+
         Args:
             file_path: The relative path of the file (e.g., 'src/main/java/App.java' or 'pom.xml')
             workspace_id: The workspace ID provided by get_workspace_tree() (e.g., 'ws-default' or 'ws-pipeline-1')
@@ -500,34 +502,41 @@ def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool
 
         try:
             if not context or not context.get("build_details"):
-              return "Error: Missing context, tell the user to try to upload the context and try again."
-                
+                return "Error: Missing context, tell the user to try to upload the context and try again."
+
             job_name = context["job_details"]["full_name"]
             build_number = context["build_details"]["number"]
-            
+
             response = await call_jenkins_api(
-            endpoint="/chatbot-api/workspaceFile",  
-            params={
-                "jobName": job_name,
-                "buildNumber": build_number,
-                "workspaceId": workspace_id,
-                "filePath": file_path
-                }
+                endpoint="/chatbot-api/workspaceFile",
+                params={
+                    "jobName": job_name,
+                    "buildNumber": build_number,
+                    "workspaceId": workspace_id,
+                    "filePath": file_path,
+                },
             )
 
             if response.get("status") == "success":
                 return response.get("content", "")
             else:
-                error_msg = response.get('message', 'Unknown API Error')
+                error_msg = response.get("message", "Unknown API Error")
                 return (
                     f"Error reading file: {error_msg}. "
                     "SYSTEM DIRECTIVE: You probably guessed an invalid 'workspace_id' or 'file_path'. "
                     "You are FORBIDDEN from guessing. YOU MUST CALL 'get_workspace_tree' NOW to find the exact IDs and paths."
-                )           
+                )
 
         except Exception as e:
             print(f"Failed to read file {file_path}: {e}")
             return f"Error reading file: {str(e)}"
-    
 
-    return [fetch_from_vectordb, get_general_jenkins_context, get_installed_plugin_list,get_job_details, get_build_details, get_workspace_tree, get_workspace_file]
+    return [
+        fetch_from_vectordb,
+        get_general_jenkins_context,
+        get_installed_plugin_list,
+        get_job_details,
+        get_build_details,
+        get_workspace_tree,
+        get_workspace_file,
+    ]

@@ -97,23 +97,28 @@ class Agent:
 
         if messages:
             last_msg = messages[-1]
-            
+
             if isinstance(last_msg, ToolMessage):
                 content_upper = str(last_msg.content).upper()
-                
-                if "ERROR" in content_upper or "NOT FOUND" in content_upper or "MISSING" in content_upper:
+
+                if (
+                    "ERROR" in content_upper
+                    or "NOT FOUND" in content_upper
+                    or "MISSING" in content_upper
+                ):
                     self.error_count += 1
 
                     if self.error_count > 1:
-                        print(f"\n[CIRCUIT BREAKER] Tool failed ({last_msg.name}). Bypassing Router LLM to prevent loops.")
-                        
+                        print(
+                            f"\n[CIRCUIT BREAKER] Tool failed ({last_msg.name}). Bypassing Router LLM to prevent loops."
+                        )
+
                         fake_thought = "MISSING_CONTEXT: The tool returned an error or the context is missing. I must stop trying and alert the final agent."
-                        
+
                         ai_msg = AIMessage(
                             content=f"<thought>\n{fake_thought}\n</thought>\n[READY]"
                         )
                         return {"messages": [ai_msg]}
-
 
         system_prompt = SystemMessage(content=ROUTER_SYSTEM_PROMPT)
         router_input = [system_prompt] + messages

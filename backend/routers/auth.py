@@ -76,8 +76,6 @@ async def get_current_user(
 def create_access_token(payload: dict) -> str:
     to_encode = payload.copy()
     iat = datetime.now(timezone.utc)
-    exp = iat + timedelta(
-        minutes=5
-    )
+    exp = iat + timedelta(minutes=5)
     to_encode.update({"iat": iat, "exp": exp, "iss": "fastapi-backend"})
     return jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
