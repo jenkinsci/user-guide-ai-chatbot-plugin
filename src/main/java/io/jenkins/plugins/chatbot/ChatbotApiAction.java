@@ -784,8 +784,7 @@ public class ChatbotApiAction implements RootAction {
                             targetWorkspace = wsAction.getWorkspace();
                         }
                     }
-                } catch (java.io.IOException e) {
-                    targetWorkspace = null;
+                } catch (java.io.IOException ignored) {
                 }
             }
         }
