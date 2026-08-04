@@ -31,6 +31,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -774,9 +775,10 @@ public class ChatbotApiAction implements RootAction {
             targetWorkspace = ((AbstractBuild<?, ?>) run).getWorkspace();
 
         } else if (run instanceof WorkflowRun workflowRun) {
-            if (workflowRun.getExecution() != null) {
+            FlowExecution execution = workflowRun.getExecution();
+            if (execution != null) {
                 try {
-                    FlowNode node = workflowRun.getExecution().getNode(workspaceId);
+                    FlowNode node = execution.getNode(workspaceId);
 
                     if (node != null) {
                         WorkspaceAction wsAction = node.getAction(WorkspaceAction.class);
