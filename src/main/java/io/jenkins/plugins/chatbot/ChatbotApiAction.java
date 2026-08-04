@@ -665,12 +665,10 @@ public class ChatbotApiAction implements RootAction {
                 wsObj.put("tree", buildDirectoryTree(ws, 3));
                 workspacesList.add(wsObj);
             }
-        } else if (run instanceof WorkflowRun) {
+        } else if (run instanceof WorkflowRun workflowRun) {
             // Pipeline - Multiple workspaces possible
-            WorkflowRun workflowRun = (WorkflowRun) run;
             if (workflowRun.getExecution() != null) {
                 FlowGraphWalker walker = new FlowGraphWalker(workflowRun.getExecution());
-                int idCounter = 1;
 
                 for (FlowNode node : walker) {
                     WorkspaceAction wsAction = node.getAction(WorkspaceAction.class);
@@ -678,12 +676,11 @@ public class ChatbotApiAction implements RootAction {
                         FilePath ws = wsAction.getWorkspace();
                         if (ws != null && ws.exists()) {
                             JSONObject wsObj = new JSONObject();
-                            wsObj.put("workspaceId", "ws-pipeline-" + idCounter);
+                            wsObj.put("workspaceId", node.getId());
                             wsObj.put("node", wsAction.getNode());
                             wsObj.put("path", wsAction.getPath());
                             wsObj.put("tree", buildDirectoryTree(ws, 3));
                             workspacesList.add(wsObj);
-                            idCounter++;
                         }
                     }
                 }
@@ -743,6 +740,24 @@ public class ChatbotApiAction implements RootAction {
         rsp.setContentType("application/json");
         JSONObject result = new JSONObject();
 
+        if (filePath == null || filePath.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "File path cannot be empty.");
+            rsp.getWriter().write(result.toString());
+            return;
+        }
+
+        if (filePath.contains("..")
+                || filePath.startsWith("/")
+                || filePath.startsWith("\\")
+                || filePath.matches("^[a-zA-Z]:.*")) {
+
+            result.put("status", "error");
+            result.put("message", "Security Error: Path traversal is not allowed. Use relative paths only.");
+            rsp.getWriter().write(result.toString());
+            return;
+        }
+
         // Retrieve the specific build
         Run<?, ?> run = getRunFromParameters(jobName, buildNumber);
         if (run == null) {
@@ -758,20 +773,19 @@ public class ChatbotApiAction implements RootAction {
         if (run instanceof AbstractBuild && "ws-default".equals(workspaceId)) {
             targetWorkspace = ((AbstractBuild<?, ?>) run).getWorkspace();
 
-        } else if (run instanceof WorkflowRun) {
-            WorkflowRun workflowRun = (WorkflowRun) run;
+        } else if (run instanceof WorkflowRun workflowRun) {
             if (workflowRun.getExecution() != null) {
-                FlowGraphWalker walker = new FlowGraphWalker(workflowRun.getExecution());
-                int idCounter = 1;
-                for (FlowNode node : walker) {
-                    WorkspaceAction wsAction = node.getAction(WorkspaceAction.class);
-                    if (wsAction != null) {
-                        if (workspaceId.equals("ws-pipeline-" + idCounter)) {
+                try {
+                    FlowNode node = workflowRun.getExecution().getNode(workspaceId);
+
+                    if (node != null) {
+                        WorkspaceAction wsAction = node.getAction(WorkspaceAction.class);
+                        if (wsAction != null) {
                             targetWorkspace = wsAction.getWorkspace();
-                            break;
                         }
-                        idCounter++;
                     }
+                } catch (java.io.IOException e) {
+                    targetWorkspace = null;
                 }
             }
         }
@@ -783,7 +797,7 @@ public class ChatbotApiAction implements RootAction {
                 // Reads the file (with a safety limit of ~50KB to avoid overloading the LLM context window)
                 String content = targetFile.readToString();
                 if (content.length() > 50000) {
-                    content = content.substring(0, 50000) + "\n\n[FILE TRUNCATED FOR SIZE LIMITS]";
+                    content = content.substring(0, 50000) + "\n\n[FILE TRUNCATED]";
                 }
                 result.put("status", "success");
                 result.put("content", content);
