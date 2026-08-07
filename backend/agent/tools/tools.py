@@ -4,6 +4,18 @@ import json
 from sqlalchemy.future import select
 from models import ContextEntity
 from sqlalchemy.ext.asyncio import AsyncSession
+from ..reranker import get_reranked_documents
+from manage_env import get_env
+from langchain_core.documents import Document
+from qdrant_client import models
+from typing import List, Literal, cast
+from vectordb.qdrant import get_with_metadata
+from ..utils import qdrant_record_to_langchain_doc
+import re
+import asyncio
+
+ENABLE_RERANKING = get_env("ENABLE_RERANKING").lower() == "true"
+CODE_BLOCK_PLACEHOLDER_PATTERN = r"\[\[CODE_BLOCK_(\d+)\]\]"
 
 
 async def get_build_logs(
@@ -20,8 +32,16 @@ async def get_build_logs(
     """
 
     try:
+        payload_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="metadata.chat_id", match=models.MatchValue(value=chat_id)
+                ),
+            ]
+        )
+
         documents = await hybrid_retriever(
-            query=query, metadata={"chat_id": chat_id}, k=3
+            query=query, payload_filter=payload_filter, k=3
         )
 
         if not documents:
@@ -64,7 +84,151 @@ async def fetch_context_from_db(chat_id: int, db_session: AsyncSession) -> dict:
     return {}
 
 
-def get_tool_list(chat_id: int, context: dict) -> list[BaseTool]:
+async def retrieve_chunk_context(
+    chunk: Document,
+    retrieval_type: Literal["window", "parent"],
+    useful_cb: tuple[str, int] | None,
+) -> tuple[str, list[str]]:
+    parent_id = chunk.metadata["parent_id"]
+    chunk_index = chunk.metadata["chunk_index"]
+    total_chunks = chunk.metadata["total_chunks"]
+
+    payload_filter: models.Filter | None = None
+
+    # 1. Setup the filter based on the retrieval type
+    if retrieval_type == "window":
+        window_range = 3
+        min_range = max(0, chunk_index - window_range)
+        max_range = min(total_chunks - 1, chunk_index + window_range)
+
+        payload_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="metadata.parent_id", match=models.MatchValue(value=parent_id)
+                ),
+                models.FieldCondition(
+                    key="metadata.chunk_index",
+                    range=models.Range(gte=min_range, lte=max_range),
+                ),
+            ]
+        )
+
+    elif retrieval_type == "parent":
+        payload_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="metadata.parent_id", match=models.MatchValue(value=parent_id)
+                )
+            ]
+        )
+
+    # 2. Fetch the text chunks
+    records, _ = get_with_metadata(payload_filter=payload_filter)
+    chunks = qdrant_record_to_langchain_doc(records)
+
+    # Sort documents sequentially by chunk_index
+    chunks = sorted(chunks, key=lambda x: x.metadata["chunk_index"])
+
+    # Merge all text chunks into a single string
+    merged_text = "\n".join([c.page_content for c in chunks])
+
+    # 3. Aggregate all code block IDs to perform a single DB query
+    all_cb_ids: set[str] = set()
+    for c in chunks:
+        print(c)
+        all_cb_ids.update(c.metadata.get("cb_ids", []))
+
+    cb_index_to_text: dict[str, str] = {}
+
+    # Only query if there are codeblocks to fetch
+    if all_cb_ids:
+        useful_cb_parent_id, useful_cb_chunk_index = (
+            useful_cb if useful_cb else (None, None)
+        )
+
+        should_conditions: list[models.Condition] = []
+        default_cb_ids = list(all_cb_ids)
+
+        # Handle the specific useful code block separately to avoid range overlap
+        if (
+            useful_cb_parent_id
+            and useful_cb_chunk_index
+            and useful_cb_parent_id in all_cb_ids
+        ):
+            # Remove it from the default IDs so it gets unique rules
+            default_cb_ids.remove(useful_cb_parent_id)
+
+            # Ensure the lower bound doesn't go below 0
+            min_cb_range = max(0, useful_cb_chunk_index - 2)
+            max_cb_range = useful_cb_chunk_index + 2
+
+            should_conditions.append(
+                models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="metadata.parent_id",
+                            match=models.MatchValue(value=useful_cb_parent_id),
+                        ),
+                        models.FieldCondition(
+                            key="metadata.chunk_index",
+                            range=models.Range(gte=min_cb_range, lte=max_cb_range),
+                        ),
+                    ]
+                )
+            )
+
+        # Add the condition for the remaining standard code blocks
+        if default_cb_ids:
+            should_conditions.append(
+                models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="metadata.parent_id",
+                            match=models.MatchAny(any=default_cb_ids),
+                        ),
+                        models.FieldCondition(
+                            key="metadata.chunk_index", range=models.Range(gte=0, lte=4)
+                        ),
+                    ]
+                )
+            )
+
+        cb_payload_filter = models.Filter(should=should_conditions)
+        cb_records, _ = get_with_metadata(payload_filter=cb_payload_filter, limit=100)
+        cb_docs = qdrant_record_to_langchain_doc(cb_records)
+
+        # 4. Group and process the fetched code block chunks
+        codeblocks_groups: dict[str, list[Document]] = {}
+        for cb_doc in cb_docs:
+            cb_parent_id = cb_doc.metadata["parent_id"]
+            if cb_parent_id not in codeblocks_groups:
+                codeblocks_groups[cb_parent_id] = []
+            codeblocks_groups[cb_parent_id].append(cb_doc)
+
+        for cb_parent_id, cb_chunks in codeblocks_groups.items():
+            ordered_cb_chunks = sorted(
+                cb_chunks, key=lambda x: x.metadata["chunk_index"]
+            )
+            cb_full_text = "\n".join(
+                [chunk.page_content for chunk in ordered_cb_chunks]
+            )
+
+            cb_index = str(ordered_cb_chunks[0].metadata.get("cb_index"))
+            cb_index_to_text[cb_index] = cb_full_text
+
+    # 5. Replace placeholders in the merged text with the actual code
+    def replace_placeholder(match: re.Match) -> str:
+        extracted_index = match.group(1)
+        return cb_index_to_text.get(extracted_index, match.group(0))  # type: ignore
+
+    final_text_with_code = re.sub(
+        CODE_BLOCK_PLACEHOLDER_PATTERN, replace_placeholder, merged_text
+    )
+
+    return final_text_with_code, list(cb_index_to_text.values())
+
+
+def get_tool_list(chat_id: int, context: dict, user_query: str) -> list[BaseTool]:
     """
     Returns a dynamic list of tools based on the available context.
     Avoids redundant database queries by using the pre-fetched context.
@@ -72,27 +236,77 @@ def get_tool_list(chat_id: int, context: dict) -> list[BaseTool]:
     available_tools = []
 
     @tool
-    async def fetch_from_vectordb(query: str, data_source: str) -> str:
+    async def fetch_from_vectordb(query: str) -> str:
         """
         Query the vector database for official documentation and community Q&A.
-        Use this tool ONLY for general knowledge, syntax, or global Jenkins concepts.
-        Do NOT use this tool to search for user-specific logs, job details, or local context.
+        Use this tool ONLY for Jenkins concepts.
+        Do NOT use this tool to search for specific build logs, information regarding the job details, or user local context.
 
         Args:
             query: The search input (e.g., "How to write a declarative pipeline", "Docker plugin setup").
-            data_source: You MUST choose exactly one of these strings based on the query context:
-                - "jenkins_docs" (For core Jenkins features and architecture)
-                - "plugin_docs" (For specific plugin configurations and syntax)
-                - "reddit_threads" (For community opinions and common troubleshooting)
-                - "discourse_topics" (For deep-dive technical discussions)
         """
-        results = await hybrid_retriever(
-            query=query, metadata={"data_source": data_source}, k=3
-        )
-        output = "These documents might be useful to answer user question:\n"
-        for i, v in enumerate(results):
-            output += f"DOCUMENT {i}:\n{v.page_content}\n"
+        print("INPUT: ", query)
+        k = 50 if ENABLE_RERANKING else 3
 
+        sources = ["jenkins_docs", "plugin_docs", "reddit_threads", "discourse_topics"]
+        cb_payload_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="metadata.data_source", match=models.MatchAny(any=sources)
+                )
+            ]
+        )
+
+        documents = await hybrid_retriever(
+            query=query, payload_filter=cb_payload_filter, k=k
+        )
+
+        # Rerank results
+        ordered_documents = documents
+        if ENABLE_RERANKING:
+            try:
+                ordered_documents: list[Document] = [
+                    data["document"]
+                    for data in get_reranked_documents(user_query, documents)
+                ]
+            except Exception as e:
+                print(e)
+                ordered_documents = documents
+
+        output = "These documents might be useful to answer user question:\n"
+        cb_useful = None
+
+        for i, v in enumerate(ordered_documents[:3]):
+            # Apply extended retrieval
+            related_id = v.metadata.get("related_id")
+            if related_id:
+                # If is a codeblock, check which is the related chunk and pass as if that
+                # one was fetched from the hybrid retriever
+                payload_filter = models.Filter(
+                    must=[models.HasIdCondition(has_id=[related_id])]
+                )
+
+                records, _ = get_with_metadata(payload_filter=payload_filter, limit=1)
+                docs = qdrant_record_to_langchain_doc(records)
+                if len(docs) == 0:
+                    continue
+                else:
+                    cb_useful = (v.metadata["parent_id"], v.metadata["chunk_index"])
+                    v = docs[0]
+
+            data_source = v.metadata.get("data_source")
+            retrieval_type = (
+                "parent"
+                if data_source == "discourse_topics" or data_source == "reddit_threads"
+                else "window"
+            )
+            final_text, _ = await retrieve_chunk_context(
+                v, retrieval_type, useful_cb=cb_useful
+            )
+
+            output += f"DOCUMENT {i}:\n{final_text}\n"
+
+        print("OUTPUT: ", output)
         return output
 
     available_tools.append(fetch_from_vectordb)
@@ -103,7 +317,7 @@ def get_tool_list(chat_id: int, context: dict) -> list[BaseTool]:
     @tool
     async def get_general_jenkins_context() -> str:
         """
-        Retrieve global settings for the current Jenkins instance.
+        Retrieve global settings for the current user's Jenkins instance.
         Use this tool to find out the Jenkins version, the master configuration,
         system messages, and the current screen the user is viewing.
         """
@@ -150,7 +364,7 @@ def get_tool_list(chat_id: int, context: dict) -> list[BaseTool]:
         @tool
         async def get_build_details(log_search_query: str) -> str:
             """
-            Retrieve the execution details of the current Jenkins build (status, timestamp, duration)
+            Retrieve the execution details of the current Jenkins build (status, timestamp, duration) the user is currently looking at
             AND search its console logs for specific errors or keywords.
 
             Args:
@@ -166,3 +380,77 @@ def get_tool_list(chat_id: int, context: dict) -> list[BaseTool]:
         available_tools.append(get_build_details)
 
     return available_tools
+
+
+if __name__ == "__main__":
+
+    async def fetch_from_vectordb(user_query: str, query: str) -> str:
+        """
+        Query the vector database for official documentation and community Q&A.
+        Use this tool ONLY for Jenkins concepts.
+        Do NOT use this tool to search for user-specific logs, job details, or local context.
+
+        Args:
+            query: The search input (e.g., "How to write a declarative pipeline", "Docker plugin setup").
+        """
+
+        k = 50 if ENABLE_RERANKING else 3
+
+        documents = await hybrid_retriever(query=query, k=k)
+
+        # Rerank results
+        ordered_documents = documents
+        if ENABLE_RERANKING:
+            try:
+                ordered_documents: list[Document] = [
+                    data["document"]
+                    for data in get_reranked_documents(user_query, documents)
+                ]
+            except Exception as e:
+                print(e)
+                ordered_documents = documents
+
+        output = "These documents might be useful to answer user question:\n"
+        cb_useful = None
+
+        for i, v in enumerate(ordered_documents[:3]):
+            # Apply extended retrieval
+            related_id = v.metadata.get("related_id")
+            if related_id:
+                # If is a codeblock, check which is the related chunk and pass as if that
+                # one was fetched from the hybrid retriever
+                print("RELATED: ", related_id)
+                payload_filter = models.Filter(
+                    must=[models.HasIdCondition(has_id=[related_id])]
+                )
+
+                records, _ = get_with_metadata(payload_filter=payload_filter, limit=1)
+                docs = qdrant_record_to_langchain_doc(records)
+                if len(docs) == 0:
+                    continue
+                else:
+                    cb_useful = (v.metadata["parent_id"], v.metadata["chunk_index"])
+                    v = docs[0]
+
+            data_source = v.metadata.get("data_source")
+            retrieval_type = (
+                "parent"
+                if data_source == "discourse_topics" or data_source == "reddit_threads"
+                else "window"
+            )
+            final_text, _ = await retrieve_chunk_context(
+                v, retrieval_type, useful_cb=cb_useful
+            )
+
+            output += f"DOCUMENT {i}:\n{final_text}\n"
+
+        return output
+
+    user_query = "Show me a common Jenkins error log"
+    query = "error log"
+
+    async def run():
+        result = await fetch_from_vectordb(user_query=user_query, query=query)
+        print(result)
+
+    asyncio.run(run())

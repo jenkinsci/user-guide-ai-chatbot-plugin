@@ -6,7 +6,17 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
-import hudson.model.*;
+import hudson.model.AbstractProject;
+import hudson.model.Cause;
+import hudson.model.CauseAction;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Node;
+import hudson.model.PageDecorator;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.RootAction;
+import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.security.ACL;
@@ -131,12 +141,20 @@ public class ChatbotApiAction implements RootAction {
                         if (jenkinsItem instanceof Job) {
                             Job<?, ?> targetJob = (Job<?, ?>) jenkinsItem;
 
+                            // Enforce per-item authorization before reading
+                            targetJob.checkPermission(Item.READ);
+
                             addJobContext(rootNode, targetJob);
 
                             if (buildNumber != null) {
-                                Run<?, ?> targetRun = targetJob.getBuildByNumber(Integer.parseInt(buildNumber));
-                                if (targetRun != null) {
-                                    addBuildContext(rootNode, targetRun);
+                                try {
+                                    int buildNo = Integer.parseInt(buildNumber);
+                                    Run<?, ?> targetRun = targetJob.getBuildByNumber(buildNo);
+                                    if (targetRun != null) {
+                                        addBuildContext(rootNode, targetRun);
+                                    }
+                                } catch (NumberFormatException ignore) {
+                                    // Ignore invalid build numbers parsed from the URL.
                                 }
                             }
                         }

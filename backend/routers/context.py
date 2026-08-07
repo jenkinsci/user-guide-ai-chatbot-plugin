@@ -4,7 +4,7 @@ from routers.auth import get_current_user, User
 from database import get_database_session
 import schemas
 from langchain_qdrant import QdrantVectorStore
-from vectordb.vector_store import get_vector_store
+from vectordb.qdrant import get_vector_store
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from typing import List
@@ -60,7 +60,7 @@ async def manage_logs(
                 metadata={
                     "chat_id": chat_id,
                     "chunk_index": index,
-                    "source": "jenkins_build_log",
+                    "data_source": "jenkins_build_log",
                 },
             )
             documents.append(doc)
@@ -71,7 +71,7 @@ async def manage_logs(
         return True
 
     except Exception as e:
-        print(f"Failed to chunk and store logs in Qdrant.")
+        print(f"Failed to chunk and store logs in Qdrant: {e}")
         return False
 
 
@@ -146,7 +146,7 @@ async def store_context(
 
 
 @router.post(
-    "/{chat_id}/",
+    "/{chat_id}",
     response_model=schemas.ContextResponse,
     status_code=status.HTTP_202_ACCEPTED,
 )

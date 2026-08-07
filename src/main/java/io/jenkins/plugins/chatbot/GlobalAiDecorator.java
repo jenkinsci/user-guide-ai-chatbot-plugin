@@ -87,16 +87,20 @@ public class GlobalAiDecorator extends PageDecorator {
 
     public String[] getJobNameAndBuildNumber(String path) {
         String[] result = new String[2];
-        String[] urlSegments = path.split("/");
+        String[] segments = path.split("/");
 
-        for (int i = 0; i < urlSegments.length; i++) {
-            if ("job".equals(urlSegments[i]) && i + 1 < urlSegments.length) {
-                result[0] = urlSegments[i + 1];
+        java.util.List<String> jobParts = new java.util.ArrayList<>();
+        for (int i = 0; i < segments.length; i++) {
+            if ("job".equals(segments[i]) && i + 1 < segments.length) {
+                jobParts.add(segments[i + 1]);
+                if (i + 2 < segments.length && segments[i + 2].matches("\\d+")) {
+                    result[1] = segments[i + 2];
+                }
             }
-            // Check if the URL contains a build number (digits)
-            if (result[0] != null && i + 2 < urlSegments.length && urlSegments[i + 2].matches("\\d+")) {
-                result[1] = urlSegments[i + 2];
-            }
+        }
+
+        if (!jobParts.isEmpty()) {
+            result[0] = jobParts.get(jobParts.toArray().length - 1);
         }
 
         return result;

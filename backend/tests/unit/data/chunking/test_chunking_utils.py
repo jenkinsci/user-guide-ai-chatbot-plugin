@@ -6,12 +6,13 @@ PATTERN = r"\[CODE_BLOCK_(\d+)\]"
 
 
 @pytest.fixture
-def code_blocks():
-    return [
-        Document(page_content="print('hello')"),
-        Document(page_content="x = 42"),
-        Document(page_content="def foo(): pass"),
-    ]
+def code_blocks_dict():
+    # Return a dictionary instead of a list to match the new function signature
+    return {
+        0: Document(page_content="print('hello')"),
+        1: Document(page_content="x = 42"),
+        2: Document(page_content="def foo(): pass"),
+    }
 
 
 @pytest.mark.parametrize(
@@ -37,7 +38,7 @@ def code_blocks():
         ),
         # 4. Duplicate placeholder → assigned only once (set deduplication)
         (
-            "Repeated [CODE_BLOCK_1]] and again [CODE_BLOCK_1].",
+            "Repeated [CODE_BLOCK_1] and again [CODE_BLOCK_1].",
             [["x = 42"]],
             1,
         ),
@@ -50,11 +51,12 @@ def code_blocks():
     ],
 )
 def test_assign_code_blocks_to_chunks(
-    code_blocks, chunk_content, expected_code_contents, expected_chunk_count
+    code_blocks_dict, chunk_content, expected_code_contents, expected_chunk_count
 ):
     chunks = [Document(page_content=chunk_content)]
 
-    result = assign_code_blocks_to_chunks(chunks, code_blocks, PATTERN)
+    # Pass the dictionary fixture to the function
+    result = assign_code_blocks_to_chunks(chunks, code_blocks_dict, PATTERN)
 
     # Output length matches number of input chunks
     assert len(result) == expected_chunk_count
@@ -72,27 +74,32 @@ def test_assign_code_blocks_to_chunks(
         assert actual_contents == expected_codes
 
 
-def test_empty_chunks_list(code_blocks):
+def test_empty_chunks_list(code_blocks_dict):
     """No chunks → returns empty list without errors."""
-    result = assign_code_blocks_to_chunks([], code_blocks, PATTERN)
+    result = assign_code_blocks_to_chunks([], code_blocks_dict, PATTERN)
     assert result == []
 
 
 def test_empty_code_blocks_list():
     """No code blocks available → every chunk gets an empty code_blocks list."""
     chunks = [Document(page_content="Text [CODE_BLOCK_0] here.")]
-    result = assign_code_blocks_to_chunks(chunks, [], PATTERN)
+
+    # Pass an empty dictionary {} instead of an empty list []
+    result = assign_code_blocks_to_chunks(chunks, {}, PATTERN)
+
     assert len(result) == 1
     assert result[0]["code_blocks"] == []
 
 
-def test_multiple_chunks_independently_assigned(code_blocks):
+def test_multiple_chunks_independently_assigned(code_blocks_dict):
     """Each chunk gets only its own referenced code blocks."""
     chunks = [
         Document(page_content="First chunk [CODE_BLOCK_0]."),
         Document(page_content="Second chunk [CODE_BLOCK_1] and [CODE_BLOCK_2]."),
     ]
-    result = assign_code_blocks_to_chunks(chunks, code_blocks, PATTERN)
+
+    # Pass the dictionary fixture to the function
+    result = assign_code_blocks_to_chunks(chunks, code_blocks_dict, PATTERN)
 
     assert len(result) == 2
     assert [cb.page_content for cb in result[0]["code_blocks"]] == ["print('hello')"]

@@ -6,6 +6,7 @@ from .chunking_utils import assign_code_blocks_to_chunks
 from pathlib import Path
 import os
 from uuid import uuid5, NAMESPACE_DNS
+import re
 
 CHUNK_ID_TEMPLATE = "{}_C_{}"
 
@@ -20,25 +21,30 @@ def bind_chunks_to_code_blocks(
     Bind each chunk to its specific code blocks by placing its ID inside the corresponding code block metadata.
 
     Returns:
-         tuple[list[Document], list[str]]: Chunk list
+        list[Document]: Chunk list
     """
-
-    cbs = []
+    cbs_dict: dict[int, Document] = {}
     cb_files = [
         file for file in code_blocks_dir.glob(f"CB_{doc_id}*.json") if file.is_file()
     ]
 
     for cb_file in cb_files:
         data = read_json_file(cb_file)
-        cbs.append(
-            Document(
+
+        match = re.search(r"_(\d+)\.json$", cb_file.name)
+        if match:
+            cb_index = int(match.group(1))
+            cbs_dict[cb_index] = Document(
                 page_content=data["page_content"],
                 metadata=data["metadata"],
                 id=data["id"],
             )
-        )
+        else:
+            print(f"Could not extract index from filename: {cb_file.name}")
 
-    results = assign_code_blocks_to_chunks(chunks, cbs, CODE_BLOCK_PLACEHOLDER_PATTERN)
+    results = assign_code_blocks_to_chunks(
+        chunks, cbs_dict, CODE_BLOCK_PLACEHOLDER_PATTERN
+    )
 
     updated_chunks: list[Document] = []
     updated_cbs: list[Document] = []
@@ -79,15 +85,16 @@ def process_doc(
     total_chunks = len(text_fragments)
 
     for current_index, text_fragment in enumerate(text_fragments):
-        chunk_id = CHUNK_ID_TEMPLATE.format(doc.id, current_index)
 
         # Build the exact metadata needed for the window logic
         chunk_metadata = {
             **doc.metadata,
             "chunk_index": current_index,
             "total_chunks": total_chunks,
-            "chunk_id": chunk_id,
+            "parent_id": doc.id,
         }
+
+        chunk_id = CHUNK_ID_TEMPLATE.format(doc.id, current_index)
 
         # Convert id to UUID (Deterministic). Necessary for Qdrant
         uuid_to_str = str(uuid5(NAMESPACE_DNS, chunk_id))
@@ -103,13 +110,18 @@ def process_doc(
     return processed_chunks, chunk_ids
 
 
-def process_docs_with_sliding_window(
+def process_doc_list(
     documents: list[Document], source: str, code_blocks_dir: Path
 ) -> tuple[list[Document], list[str]]:
     """
-    Process Documents using a sliding window approach.
-    Means no chunk overlap and the hybrid retriever when retrieving a specific chunk will also
-    fetch back the n previous chunks and n consequent chunks.
+    Process 'jenkins_docs' and 'plugin_docs' using a Hybrid window retrieval (Sliding window - Sentence window).
+    Means having a chunk overlap and the hybrid retriever when retrieving a specific chunk will also
+    fetch back the n previous chunks and n consequent chunks. A specific function will be used to
+    do an Overlap Deduplication so that the text that the LLM will receive won't have any duplications.
+
+    Process 'discourse_topics' and 'reddit_threads' using a Parent-child retrieval.
+    Means having no chunk overlap and the hybrid retriever when retrieving a specific chunk will also
+    fetch back all the chunks inside the first retrieved chunk parent.
 
     Args:
         documents (list[Document])
@@ -121,7 +133,16 @@ def process_docs_with_sliding_window(
     processed_chunks: list[Document] = []
     chunk_ids = []
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+    chunk_overlap = (
+        100
+        if source == DataSource.JENKINS_DOCS.value
+        or source == DataSource.PLUGIN_DOCS.value
+        else 0
+    )
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500, chunk_overlap=chunk_overlap
+    )
 
     for doc in documents:
         # Splitting document in chunks
@@ -168,9 +189,7 @@ def chunker(sources: list[DataSource], output_dir: Path):
             print(f"No document for {source}")
             continue
 
-        chunks, chunk_ids = process_docs_with_sliding_window(
-            documents, source, CODE_BLOCKS_DIR
-        )
+        chunks, chunk_ids = process_doc_list(documents, source, CODE_BLOCKS_DIR)
 
         for i in range(0, len(chunk_ids)):
             path = CHUNKS_DIR / f"{source}/{chunk_ids[i]}.json"
