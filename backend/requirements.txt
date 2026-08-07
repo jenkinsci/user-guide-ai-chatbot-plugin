@@ -70,7 +70,7 @@ langchain-qdrant==1.1.0
 langchain-text-splitters==1.1.2
 langgraph==1.2.4
 langgraph-checkpoint==4.1.1
-langgraph-checkpoint-postgres==3.1.0
+langgraph-checkpoint-postgres==3.1.1
 langgraph-prebuilt==1.1.0
 langgraph-sdk==0.4.2
 langsmith==0.8.18
