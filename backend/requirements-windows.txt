@@ -16,7 +16,7 @@ cachetools==7.1.4
 certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
-click==8.4.1
+click==8.4.2
 colorama==0.4.6
 cryptography==50.0.0
 distro==1.9.0
