@@ -32,7 +32,7 @@ flatbuffers==25.12.19
 frozenlist==1.8.0
 fsspec==2026.4.0
 googleapis-common-protos==1.75.0
-greenlet==3.5.1
+greenlet==3.5.5
 groq==0.37.1
 grpcio==1.83.0
 h11==0.16.0
