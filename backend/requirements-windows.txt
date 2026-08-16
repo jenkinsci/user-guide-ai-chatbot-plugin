@@ -15,7 +15,7 @@ build==1.5.0
 cachetools==7.1.4
 certifi==2026.5.20
 cffi==2.0.0
-charset-normalizer==3.4.7
+charset-normalizer==3.5.1
 click==8.4.1
 colorama==0.4.6
 cryptography==50.0.0
