@@ -305,7 +305,7 @@ requires-dist = [
     { name = "beautifulsoup4" },
     { name = "black", marker = "extra == 'dev'", specifier = "==26.5.1" },
     { name = "cachetools" },
-    { name = "deepeval", specifier = "==4.1.5" },
+    { name = "deepeval", specifier = "==4.1.10" },
     { name = "fastapi" },
     { name = "fastembed", specifier = ">=0.8.0" },
     { name = "langchain" },
@@ -720,7 +720,7 @@ nvtx = [
 
 [[package]]
 name = "deepeval"
-version = "4.1.5"
+version = "4.1.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -745,7 +745,6 @@ dependencies = [
     { name = "questionary" },
     { name = "requests" },
     { name = "rich" },
-    { name = "sentry-sdk" },
     { name = "setuptools" },
     { name = "tabulate" },
     { name = "tenacity" },
@@ -753,9 +752,9 @@ dependencies = [
     { name = "typer" },
     { name = "wheel" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/53/12/ec23bff209b1202e8cc342a6b50ec302f7cfa3e52edacd4372505fd31dea/deepeval-4.1.5.tar.gz", hash = "sha256:064bffc288b899d3ac010e0b7c5eaaba11232e93140d8aeb988bd3f9bb09ee3e", size = 783751, upload-time = "2026-07-31T10:04:38.252Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/e2/915b6ad1c53f0b38ba7510b88d8239edd58104fc4f69d23f9e28113c9df2/deepeval-4.1.10.tar.gz", hash = "sha256:14a5b6ca7df3181aa23c4829d8814a328af3f2fd2bb2950d39c9026feac7b6a0", size = 855323, upload-time = "2026-08-21T19:24:38.497Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/f4/249f70ecab6a64d3ce7b783f32aade32ed697f6a8179e3eb35ae90dba3e2/deepeval-4.1.5-py3-none-any.whl", hash = "sha256:402f0a0b5968162a7b3af1fb99d443130626f27442b768e20ac93986188ae280", size = 1120506, upload-time = "2026-07-31T10:04:40.143Z" },
+    { url = "https://files.pythonhosted.org/packages/32/e1/efb276a8bdeb437001592c2cd2bb141f53baa1ba7a81c3ced1ccfa9456af/deepeval-4.1.10-py3-none-any.whl", hash = "sha256:d99c9aa4bfe546291b5bbe1c1ce0e9325d5fbdf4660bf5823e53f5f960d2f154", size = 1216565, upload-time = "2026-08-21T19:24:40.544Z" },
 ]
 
 [[package]]
@@ -3440,19 +3439,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/9d/59/867381b1414a975da6c9953f48a07c05cb0629305e2d37c9bcc9764367b2/sentence_transformers-5.7.0.tar.gz", hash = "sha256:fd8c8fc35e6323631dff9f3760969ebf7980dc3cfda0ab1354bc6a774cc0e5d8", size = 466382, upload-time = "2026-08-06T12:12:33.371Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e8/c8/f63d99e354532f5b83e735dd1e001bda92495fbfde934f65d924abf2b071/sentence_transformers-5.7.0-py3-none-any.whl", hash = "sha256:b78141da3d8137e70d965866e2ca43190b9266f3d4d8752e250ded75e7136730", size = 611333, upload-time = "2026-08-06T12:12:31.881Z" },
-]
-
-[[package]]
-name = "sentry-sdk"
-version = "2.66.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/6f/d59cad0889d15fde85254cf58e701484de3f3f0406003b3197746910b19b/sentry_sdk-2.66.1.tar.gz", hash = "sha256:f882fb08710c5f8bfc603aafa3e901b384009a19cc3f76a572b863392ee81cdc", size = 940543, upload-time = "2026-07-22T12:26:54.553Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/d3/726bd88f0eece09ddf431bea4c9191c18e7a8d070b854eb0014d447712ee/sentry_sdk-2.66.1-py3-none-any.whl", hash = "sha256:86002793161d9a95ef04bdd8d442e9bfece5d989b755f05d6360215094a7aff6", size = 505555, upload-time = "2026-07-22T12:26:52.71Z" },
 ]
 
 [[package]]
