@@ -5,12 +5,11 @@ from deepeval import assert_test
 from agent.tools.tools import get_tool_list
 from eval.utils import JUDGE_MODEL
 from eval.test_cases import CONTEXT_RECALL_TEST_CASES
-from eval.eval_tracker import tracker
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_case", CONTEXT_RECALL_TEST_CASES)
-async def test_real_vectordb_context_recall(test_case: dict):
+async def test_real_vectordb_context_recall(test_case: dict, request):
     """
     Evaluates the real Hybrid Retriever and Reranker (Context Recall).
     It calls the actual Qdrant DB and checks if the retrieved chunks
@@ -54,10 +53,16 @@ async def test_real_vectordb_context_recall(test_case: dict):
     )
 
     try:
+        await context_recall_metric.a_measure(test_case_obj)
+
         assert_test(test_case_obj, [context_recall_metric])
     except AssertionError as e:
         print(f"\n[Recall Failed] Reason: {context_recall_metric.reason}")
         raise e
     finally:
-        if context_recall_metric.score is not None:
-            tracker.add_score("context_recall", context_recall_metric.score)
+        final_score = (
+            context_recall_metric.score
+            if context_recall_metric.score is not None
+            else 0.0
+        )
+        request.config.eval_scores["context_recall"].append(final_score)

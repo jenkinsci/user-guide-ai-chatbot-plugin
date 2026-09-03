@@ -1,5 +1,5 @@
 import os
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry

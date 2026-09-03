@@ -10,7 +10,6 @@ from eval.test_cases import PERFORMANCE_TEST_CASES
 from agent.agent import Agent
 from langgraph.checkpoint.memory import MemorySaver
 from manage_env import get_env
-from eval.eval_tracker import tracker
 
 PRICE_PER_1M_INPUT_TOKENS = float(get_env("PRICE_PER_1M_INPUT_TOKENS") or 0)
 PRICE_PER_1M_OUTPUT_TOKENS = float(get_env("PRICE_PER_1M_OUTPUT_TOKENS") or 0)
@@ -132,7 +131,7 @@ DUMMY_CONTEXT = {
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_case", PERFORMANCE_TEST_CASES)
-async def test_agent_performance_and_cost(test_case: dict):
+async def test_agent_performance_and_cost(test_case: dict, request):
     """
     Executes an End-to-End performance test ensuring the agent stays within
     acceptable latency and budget limits for various task complexities.
@@ -206,7 +205,15 @@ async def test_agent_performance_and_cost(test_case: dict):
     cost_metric = AgentCostMetric(threshold=allowed_cost, measured_cost=total_cost)
 
     try:
+        await latency_metric.a_measure(test_case_obj)
+        await cost_metric.a_measure(test_case_obj)
+
         assert_test(test_case_obj, [latency_metric, cost_metric])
     finally:
-        tracker.add_score("latency", execution_time)
-        tracker.add_score("cost_per_query", total_cost)
+        latency_final_score = (
+            latency_metric.score if latency_metric.score is not None else 0.0
+        )
+        request.config.eval_scores["latency"].append(latency_final_score)
+
+        cost_final_score = cost_metric.score if cost_metric.score is not None else 0.0
+        request.config.eval_scores["cost_per_query"].append(cost_final_score)

@@ -652,7 +652,7 @@ public class ChatbotApiAction implements RootAction {
 
     /**
      * Retrieves the tree of all workspaces for a specific build.
-     * Example URL: {@code /chatbot/workspaceTree?jobName=my-pipeline&buildNumber=12}
+     * Example URL: {@code /chatbot-api/workspaceTree?jobName=my-pipeline&buildNumber=12}
      */
     public void doWorkspaceTree(
             StaplerRequest2 req, StaplerResponse2 rsp, @QueryParameter String jobName, @QueryParameter int buildNumber)
@@ -746,7 +746,7 @@ public class ChatbotApiAction implements RootAction {
 
     /**
      * Reads the content of a specific file within a specific workspace.
-     * Example URL: {@code /chatbot/workspaceFile?jobName=my-pipeline&buildNumber=12&workspaceId=ws-pipeline-1&filePath=src/main/App.java}
+     * Example URL: {@code /chatbot-api/workspaceFile?jobName=my-pipeline&buildNumber=12&workspaceId=ws-pipeline-1&filePath=src/main/App.java}
      */
     public void doWorkspaceFile(
             StaplerRequest2 req,

@@ -29,17 +29,17 @@ jobs:
         run: |
           uv sync --extra dev
 
-      - name: Run e2e tests
+      - name: Run data pipeline e2e tests
         working-directory: backend
         run: |
           uv run pytest tests/e2e
-      - name: Run unit tests
+      - name: Run data pipeline unit tests
         working-directory: backend
         env:
           PYTHONPATH: ${{github.workspace}}/backend
         run: |
           uv run pytest tests/unit
-      - name: Run integration tests
+      - name: Run data pipeline integration tests
         working-directory: backend
         env:
           PYTHONPATH: ${{github.workspace}}/backend

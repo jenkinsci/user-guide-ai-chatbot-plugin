@@ -5,13 +5,12 @@ from deepeval.metrics import FaithfulnessMetric
 from deepeval import assert_test
 from eval.utils import execute_test_agent, create_mock_tools, JUDGE_MODEL
 from eval.test_cases import FAITHFULNESS_TEST_CASES
-from eval.eval_tracker import tracker
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_case", FAITHFULNESS_TEST_CASES)
 @patch("agent.agent.get_tool_list")
-async def test_faithfulness(mock_get_tool_list, test_case: dict):
+async def test_faithfulness(mock_get_tool_list, test_case: dict, request):
     """
     Evaluates Faithfulness (Groundedness) across multiple scenarios.
     Checks if the agent's output is fully deducible from the tool responses,
@@ -41,7 +40,12 @@ async def test_faithfulness(mock_get_tool_list, test_case: dict):
     faithfulness_metric = FaithfulnessMetric(threshold=0.8, model=JUDGE_MODEL)
 
     try:
+        await faithfulness_metric.a_measure(test_case_obj)
+
         assert_test(test_case_obj, [faithfulness_metric])
+
     finally:
-        if faithfulness_metric.score is not None:
-            tracker.add_score("faithfulness", faithfulness_metric.score)
+        final_score = (
+            faithfulness_metric.score if faithfulness_metric.score is not None else 0.0
+        )
+        request.config.eval_scores["faithfulness"].append(final_score)

@@ -1,4 +1,4 @@
-name: Deploy Docs and PR Previews
+name: Deploy Docs with Sphinx
 
 on:
   push:
@@ -17,26 +17,28 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Setup Python environment
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
-      - name: Install required packages
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install Sphinx and the theme
-          pip install sphinx sphinx-rtd-theme
+          pip install sphinx
+          if [ -f docs/requirements.txt ]; then pip install -r docs/requirements.txt; fi
 
-      - name: Build HTML documentation
+      - name: Build Sphinx documentation
         run: |
-          # Build from docs/ to docs/html/
-          sphinx-build -b html docs/ docs/html/
-          
-          # Create .nojekyll to prevent GitHub from ignoring Sphinx assets
-          touch docs/html/.nojekyll
+          sphinx-build -b html docs/ docs/html
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-docs
+          path: docs/html/
 
       - name: Deploy Production Docs to gh-pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

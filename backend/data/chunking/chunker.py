@@ -68,7 +68,8 @@ def bind_chunks_to_code_blocks(
     chunks: list[Document], doc_id: str, code_blocks_dir: Path
 ) -> list[Document]:
     """
-    Bind each chunk to its specific code blocks document by placing its ID inside the corresponding code block metadata.
+    Bind each chunk to its specific code blocks document by placing its ID inside the
+    "related_id" field of the corresponding code block metadata.
 
     Returns:
         list[Document]: Chunk list
