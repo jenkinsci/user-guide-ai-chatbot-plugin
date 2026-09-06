@@ -5,18 +5,18 @@ import asyncio
 from manage_env import get_env
 import pytest
 
-EVAL_THROTTLE_SECONDS = get_env("EVAL_THROTTLE_SECONDS")
 
+EVAL_THROTTLE_SECONDS = get_env("EVAL_THROTTLE_SECONDS")
 
 @pytest.fixture(autouse=True)
 async def api_rate_limit_throttle():
     """
-    Automatically introduces a delay after every test execution
+    Automatically introduces a delay after every test execution 
     to prevent hitting API Requests limits.
     """
-    yield
-
-    throttle_seconds = float(EVAL_THROTTLE_SECONDS)
+    yield 
+    
+    throttle_seconds = float(EVAL_THROTTLE_SECONDS) 
     print(f"\n[Throttle] Waiting {throttle_seconds}s to respect API rate limits...")
     await asyncio.sleep(throttle_seconds)
 
@@ -49,9 +49,15 @@ def pytest_sessionfinish(session, exitstatus):
         if scores:
             average = sum(scores) / len(scores)
             # Grouping average and the full array under the metric name
-            report[metric_name] = {"average": round(average, 5), "all_scores": scores}
+            report[metric_name] = {
+                "average": round(average, 5),
+                "all_scores": scores
+            }
         else:
-            report[metric_name] = {"average": None, "all_scores": []}
+            report[metric_name] = {
+                "average": None,
+                "all_scores": []
+            }
 
     report_dir = "test_reports"
     os.makedirs(report_dir, exist_ok=True)
