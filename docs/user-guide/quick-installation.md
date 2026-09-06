@@ -29,17 +29,7 @@ Change your current working directory to the newly cloned project folder:
 cd user-guide-ai-chatbot-plugin
 ```
 
-### 5. Build Frontend
-
-Build the frontend project
-
-```bash
-cd frontend
-npm run build
-cd ../
-```
-
-### 6. Configure .env file
+### 5. Configure environment file
 
 Create another copy of the .env.example file in the backend folder and name it .env.prod
 Change the following vars:
@@ -62,14 +52,17 @@ FINAL_LLM_API_KEY = "your-secret-key"
 
 ########### POSTGRESQL ############
 POSTGRES_PASSWORD="your-secret-key"
+POSTGRES_URL="postgresql+asyncpg://admin_user:your-secret-key=@localhost:5432/production_db"
 
 ############ QDRANT #############
 QDRANT_SECRET_KEY="your-secret-key"
+QDRANT__SERVICE__API_KEY="your-secret-key" # same as QDRANT_SECRET_KEY
+
 
 # ... rest unchanged
 ```
 
-You can quickly generate a secret key with the following command: 
+You can quickly generate a secret key for the following fields with the following command: 
 ```bash
 openssl rand -hex 32
 ```
@@ -84,17 +77,19 @@ Set the following vars:
 
 **API Key Credential** -> has to be the same value of the JWT_SECRET_KEY env var
 
+
 ### 8. Run the project
 
 Execute the following command: 
 
 ```bash
+cd backend
 python run.py prod
 ```
 
 ### 9. Restart Jenkins
 
-Now restart Jenkins and you should be finally able to see the button to open chatbot panel at the bottom right of the screen.
+Now restart Jenkins, you should be able to see the button to open chatbot panel at the bottom right of the screen.
 
 ![Open panel button](../../_static/images/ai-chatbot-button.png)
 
