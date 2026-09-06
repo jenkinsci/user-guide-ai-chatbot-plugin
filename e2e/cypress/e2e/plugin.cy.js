@@ -1,3 +1,7 @@
+Cypress.on("window:before:load", (win) => {
+  cy.spy(win.console, "error").as("consoleError");
+});
+
 describe("Check Frontend UI injection correctness", () => {
   beforeEach(() => {
     cy.visit("/");

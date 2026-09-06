@@ -8,8 +8,8 @@ If you want to develop or test the plugin in its entirety, you need to start bot
 1. From the terminal, in the **main (root) folder**, compile and start the base process:
 ```bash
 # Clean the project and run the HPI plugin
-mvnd install
-mvnd clean hpi:run
+mvn install
+mvn clean hpi:run
 ```
 
 2. In a **second terminal**, start the backend in Python:
