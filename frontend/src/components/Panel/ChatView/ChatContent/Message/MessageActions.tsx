@@ -33,7 +33,12 @@ export default function MessageActions({
       }}
     >
       <Tooltip title="Edit">
-        <IconButton size="small" onClick={handleStartEdit}>
+        <IconButton
+          title="Edit Button"
+          data-cy="edit-button"
+          size="small"
+          onClick={handleStartEdit}
+        >
           <EditIcon sx={{ fontSize: 15 }} />
         </IconButton>
       </Tooltip>
@@ -59,7 +64,12 @@ export default function MessageActions({
         </IconButton>
       </Tooltip>
       <Tooltip title="Retry">
-        <IconButton size="small" onClick={() => onRetry()}>
+        <IconButton
+          title="Retry Button"
+          data-cy="retry-button"
+          size="small"
+          onClick={() => onRetry()}
+        >
           <ReplayIcon sx={{ fontSize: 15 }} />
         </IconButton>
       </Tooltip>

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/chats", tags=["Chats Management"])
 
 
 @router.post(
-    "/", response_model=schemas.ChatResponse, status_code=status.HTTP_201_CREATED
+    "", response_model=schemas.ChatResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_new_chat(
     chat_data: schemas.ChatCreateRequest,
@@ -34,7 +34,7 @@ async def create_new_chat(
     return new_chat_record
 
 
-@router.get("/", response_model=schemas.PaginatedChatResponse)
+@router.get("", response_model=schemas.PaginatedChatResponse)
 async def get_my_chats(
     limit: int = Query(
         20, ge=1, le=100, description="Number of chats to return per page"

@@ -17,6 +17,10 @@ export default function EditInput({
   return (
     <Box sx={{ width: "100%", maxWidth: "80%" }}>
       <TextField
+        title="Edit Input"
+        inputRef={(el) => {
+          if (el) el.setAttribute("data-cy", "edit-input");
+        }}
         fullWidth
         multiline
         autoFocus
@@ -49,6 +53,8 @@ export default function EditInput({
         }}
       >
         <Button
+          aria-label="Cancel Edit Button"
+          data-cy="cancel-edit-button"
           size="small"
           onClick={handleCancelEdit}
           sx={{ textTransform: "none", borderRadius: 2 }}
@@ -56,6 +62,8 @@ export default function EditInput({
           Cancel
         </Button>
         <Button
+          title="Confirm Edit Button"
+          data-cy="confirm-edit-button"
           size="small"
           variant="contained"
           onClick={handleConfirmEdit}

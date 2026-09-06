@@ -11,8 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from .agent import Agent
 from manage_env import get_env
+import asyncio
 
 DEBUG_MODE = get_env("DEBUG_MODE").lower() == "true"
+E2E_TEST = get_env("E2E_TEST").lower() == "true"
 LANGFUSE_TRACING = get_env("LANGFUSE_TRACING").lower() == "true"
 LANGSMITH_TRACING = get_env("LANGSMITH_TRACING").lower() == "true"
 LANGGRAPH_RECURSION_LIMIT = int(get_env("LANGGRAPH_RECURSION_LIMIT") or 10)
@@ -209,6 +211,16 @@ async def execute_agent_debug(
         print("\n=== AGENT EXECUTION FINISHED ===\n")
 
 
+async def execute_agent_mock(prompt: str) -> AsyncIterator[str]:
+    mock_response = f"Mocked response for prompt: {prompt}"
+
+    chunks = mock_response.split(" ")
+
+    for chunk in chunks:
+        yield chunk + " "
+        await asyncio.sleep(0.05)
+
+
 async def execute_agent(
     prompt: str,
     chat_id: int,
@@ -216,8 +228,9 @@ async def execute_agent(
     checkpointer: AsyncPostgresSaver,
 ) -> AsyncIterator[str]:
 
-    generator: AsyncIterator[str]
-    if DEBUG_MODE:
+    if E2E_TEST: 
+        generator = execute_agent_mock(prompt)
+    elif DEBUG_MODE:
         generator = execute_agent_debug(prompt, chat_id, db_session, checkpointer)
     else:
         generator = execute_agent_prod(prompt, chat_id, db_session, checkpointer)
