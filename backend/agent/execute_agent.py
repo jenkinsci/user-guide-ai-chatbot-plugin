@@ -228,7 +228,7 @@ async def execute_agent(
     checkpointer: AsyncPostgresSaver,
 ) -> AsyncIterator[str]:
 
-    if E2E_TEST: 
+    if E2E_TEST:
         generator = execute_agent_mock(prompt)
     elif DEBUG_MODE:
         generator = execute_agent_debug(prompt, chat_id, db_session, checkpointer)
