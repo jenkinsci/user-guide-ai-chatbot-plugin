@@ -2,11 +2,10 @@
 
 For Jenkins documentation, plugin documentation, and Reddit threads, we use a scraping approach, while for Discourse topics, we use the official API.
 
-If you only need to set up the plugin, we suggest running the data pipeline by executing: 
+**To run collection phase:**
 ```bash
-python -m data.manager --sources jenkins_docs plugin_docs
+python -m data.collection.collectors
 ```
-> **Note**: Make sure you're in the backend directory before running this or any script.
 
 ## Jenkins Documentation
 
