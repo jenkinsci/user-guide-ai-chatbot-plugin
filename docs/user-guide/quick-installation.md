@@ -1,12 +1,12 @@
 # Quick Installation
 
-This guide helps explain how to quickly setup the plugin to try it for the first time, skipping additional configurations.
+This guide helps explain how to quickly setup the plugin to try it for the first time, skipping additional configurations (not suitable for production).
 
 ### 1. Prerequisites
 
 Before you begin, ensure you have the following installed on your system:
 * **Git**
-* **Python**
+* **Python**: 3.12+
 * **Docker**
 
 ### 2. Install the plugin on the Jenkins instance
@@ -31,7 +31,7 @@ cd user-guide-ai-chatbot-plugin
 
 ### 5. Configure environment file
 
-Create another copy of the .env.example file in the backend folder and name it .env.prod
+Create a copy of the .env.prod.example file in the backend folder and name it .env.prod
 Change the following vars:
 
 ```bash
@@ -50,21 +50,7 @@ FINAL_LLM_MODEL_NAME = "gpt-oss-20b"
 FINAL_LLM_BASE_URL = "https://api.groq.com/openai/v1/"
 FINAL_LLM_API_KEY = "your-secret-key"
 
-########### POSTGRESQL ############
-POSTGRES_PASSWORD="your-secret-key"
-POSTGRES_URL="postgresql+asyncpg://admin_user:your-secret-key=@localhost:5432/production_db"
-
-############ QDRANT #############
-QDRANT_SECRET_KEY="your-secret-key"
-QDRANT__SERVICE__API_KEY="your-secret-key" # same as QDRANT_SECRET_KEY
-
-
 # ... rest unchanged
-```
-
-You can quickly generate a secret key for the following fields with the following command: 
-```bash
-openssl rand -hex 32
 ```
 
 ### 7. Setup in Jenkins
