@@ -1,14 +1,11 @@
 name: E2E Tests Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - develop
   pull_request:
     branches:
-      - main
-      - develop
+      - "main"
+      - "master"
+    types: [opened, synchronize, reopened]
 
 jobs:
   run-e2e-tests:

@@ -16,6 +16,7 @@ mvn clean hpi:run
 ```bash
 # Navigate to the backend folder and start the dev server
 cd backend
+python run.py install
 python run.py dev
 ```
 
