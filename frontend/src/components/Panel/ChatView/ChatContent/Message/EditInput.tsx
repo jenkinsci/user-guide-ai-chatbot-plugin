@@ -15,12 +15,9 @@ export default function EditInput({
   setEditValue,
 }: EditInputProps) {
   return (
-    <Box sx={{ width: "100%", maxWidth: "80%" }}>
+    <Box data-cy="edit-input" sx={{ width: "100%", maxWidth: "80%" }}>
       <TextField
         title="Edit Input"
-        inputRef={(el) => {
-          if (el) el.setAttribute("data-cy", "edit-input");
-        }}
         fullWidth
         multiline
         autoFocus

@@ -41,12 +41,12 @@ JWT_SECRET_KEY="your-secret-key"
 
 ########### AGENT ############
 ROUTER_LLM_PROVIDER="groq"
-ROUTER_LLM_MODEL_NAME = "llama-3.3-70b-versatile"
+ROUTER_LLM_MODEL_NAME = "gpt-oss-20b"
 ROUTER_LLM_BASE_URL = "https://api.groq.com/openai/v1/"
 ROUTER_LLM_API_KEY = "your-secret-key"
 
 FINAL_LLM_PROVIDER="groq"
-FINAL_LLM_MODEL_NAME = "llama-3.3-70b-versatile"
+FINAL_LLM_MODEL_NAME = "gpt-oss-20b"
 FINAL_LLM_BASE_URL = "https://api.groq.com/openai/v1/"
 FINAL_LLM_API_KEY = "your-secret-key"
 

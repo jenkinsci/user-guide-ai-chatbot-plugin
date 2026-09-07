@@ -62,7 +62,8 @@ services:
         ]
       interval: 10s
       timeout: 10s
-      retries: 10
+      retries: 5
+      start_period: 60s
 
   jenkins_app:
     container_name: jenkins_app_e2e_test

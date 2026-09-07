@@ -107,7 +107,7 @@
     </pluginRepository>
   </pluginRepositories>
 
-<build>
+  <build>
     <plugins>
       <!-- Plugin to handle Node.js and frontend build process -->
       <plugin>
