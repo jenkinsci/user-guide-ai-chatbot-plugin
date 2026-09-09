@@ -52,10 +52,6 @@ def dev():
     subprocess.run([str(PYTHON), str(SCRIPT_DIR / "main.py")], check=True)
 
 
-import os
-import subprocess
-
-
 def prod():
     print("    Starting Docker services...")
 
@@ -69,6 +65,7 @@ def prod():
         "--profile",
         "prod",
         "up",
+        "-d",
         "--build",
         "backend",
     ]

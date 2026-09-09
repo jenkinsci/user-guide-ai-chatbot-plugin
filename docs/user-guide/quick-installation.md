@@ -1,6 +1,6 @@
 # Quick Installation
 
-This guide helps explain how to quickly setup the plugin to try it for the first time, skipping additional configurations (not suitable for production).
+This guide explains how to quickly set up the plugin to try it for the first time, skipping additional configurations (not suitable for production).
 
 ### 1. Prerequisites
 

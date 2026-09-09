@@ -19,7 +19,7 @@ This plugin is an AI-powered chatbot powered by an agent that aims to help both 
 ## Getting started
 
 ### User tutorial
-Here you can find a tutorial on how to quickly install and configure the plugin.: [User Guide](https://jenkinsci.github.io/user-guide-ai-chatbot-plugin/user-guide/index.html)
+Here you can find a tutorial on how to quickly install and configure the plugin: [User Guide](https://jenkinsci.github.io/user-guide-ai-chatbot-plugin/user-guide/index.html)
 
 ### Contributor Docs
 If you would like to contribute to the plugin, you can find the documentation here.: [Developer Docs](https://jenkinsci.github.io/user-guide-ai-chatbot-plugin/developer-docs/index.html)
