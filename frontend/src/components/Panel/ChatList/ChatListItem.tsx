@@ -134,7 +134,7 @@ export default function ChatListItem({
         {isEditing ? (
           <InputBase
             title="Edit Chat History Item Title Input"
-            data-cy="edit-chat-history-item-title-input"
+            inputProps={{ "data-cy": "edit-chat-history-item-title-input" }}
             value={editTitleValue}
             onChange={(e) => setEditTitleValue(e.target.value)}
             onKeyDown={handleKeyDown}
