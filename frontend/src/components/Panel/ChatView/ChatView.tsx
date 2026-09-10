@@ -114,7 +114,7 @@ export default function ChatView({
 
     const response = await apiCall({
       method: "POST",
-      path: "chats/",
+      path: "chats",
       payload: {
         title: title.length > 80 ? title.slice(0, 80) + "..." : title,
       },

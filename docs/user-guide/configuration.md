@@ -130,6 +130,8 @@ QDRANT_PORT="6333"
 QDRANT_SSL="false"
 QDRANT_COLLECTION_NAME="production_docs"
 QDRANT_SECRET_KEY="your-secret-key"
+QDRANT__SERVICE__JWT_RBAC="true"
+QDRANT__SERVICE__API_KEY="your-secret-key" # same as QDRANT_SECRET_KEY
 ```
 
 ## Reranker
