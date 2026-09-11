@@ -53,7 +53,7 @@ FINAL_LLM_API_KEY = "your-secret-key"
 # ... rest unchanged
 ```
 
-### 7. Setup in Jenkins
+### 6. Setup in Jenkins
 
 Go in Manage Jenkins > System, scroll until you find the section "AI Chatbot Settings".
 
@@ -64,7 +64,7 @@ Set the following vars:
 **API Key Credential** -> has to be the same value of the JWT_SECRET_KEY env var
 
 
-### 8. Run the project
+### 7. Run the project
 
 Execute the following command: 
 
@@ -73,7 +73,7 @@ cd backend
 python run.py prod
 ```
 
-### 9. Restart Jenkins
+### 8. Restart Jenkins
 
 Now restart Jenkins, you should be able to see the button to open chatbot panel at the bottom right of the screen.
 
