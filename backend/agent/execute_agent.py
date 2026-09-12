@@ -9,7 +9,6 @@ from typing import AsyncIterator, Sequence
 from .tools.tools import fetch_context_from_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from .agent import Agent
 from manage_env import get_env
 import asyncio
 
@@ -30,6 +29,8 @@ async def execute_agent_prod(
     Executes the agent and yields the final response chunk by chunk.
     Streams both "messages" (for frontend tokens) and "updates" (for state debugging).
     """
+    from .agent import Agent
+
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
@@ -93,6 +94,8 @@ async def execute_agent_debug(
     Executes the agent and yields the final response chunk by chunk.
     Streams both "messages" (for frontend tokens) and "updates" (for state debugging).
     """
+    from .agent import Agent
+
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
 
