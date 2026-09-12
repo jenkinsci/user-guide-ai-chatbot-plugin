@@ -15,7 +15,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @Extension
-@Symbol("chatbotConfig")
+@Symbol("AiChatbotWorkflowConfig")
 public class ChatbotGlobalConfig extends GlobalConfiguration {
 
     private String backendUrl;

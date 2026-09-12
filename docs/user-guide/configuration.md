@@ -23,6 +23,8 @@ are the suggested ones.
 
 ```bash
 ####### HYBRID RETRIEVER #######
+HF_TOKEN="your-secret-key" # Optional
+
 # Search for one here: https://huggingface.co/models?library=sentence-transformers
 HUGGING_FACE_EMBEDDING_NAME="all-MiniLM-L6-v2"
 EMBEDDING_SIZE="384"
@@ -88,16 +90,18 @@ ROUTER_LLM_API_KEY (if the provider doesn't require it) and ROUTER_LLM_TEMPERATU
 ```bash
 ########### AGENT ############
 ROUTER_LLM_PROVIDER="groq"
-ROUTER_LLM_MODEL_NAME = "llama-3.3-70b-versatile"
+ROUTER_LLM_MODEL_NAME = "gpt-oss-20b"
 ROUTER_LLM_BASE_URL = "https://api.groq.com/openai/v1/"
 ROUTER_LLM_API_KEY = "your-secret-key"
 ROUTER_LLM_TEMPERATURE = "0"
+ROUTER_LLM_MAX_TOKENS = "8000"
 
 FINAL_LLM_PROVIDER="groq"
-FINAL_LLM_MODEL_NAME = "llama-3.3-70b-versatile"
+FINAL_LLM_MODEL_NAME = "gpt-oss-20b"
 FINAL_LLM_BASE_URL = "https://api.groq.com/openai/v1/"
 FINAL_LLM_API_KEY = "your-secret-key"
 FINAL_LLM_TEMPERATURE = "0.2"
+FINAL_LLM_MAX_TOKENS = "8000"
 
 LANGGRAPH_RECURSION_LIMIT = "10"
 ```
@@ -126,6 +130,8 @@ QDRANT_PORT="6333"
 QDRANT_SSL="false"
 QDRANT_COLLECTION_NAME="production_docs"
 QDRANT_SECRET_KEY="your-secret-key"
+QDRANT__SERVICE__JWT_RBAC="true"
+QDRANT__SERVICE__API_KEY="your-secret-key" # same as QDRANT_SECRET_KEY
 ```
 
 ## Reranker

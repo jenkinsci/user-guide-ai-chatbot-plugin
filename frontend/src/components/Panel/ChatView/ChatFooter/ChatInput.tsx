@@ -31,6 +31,12 @@ export default function ChatInput({
     >
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
         <TextField
+          title="Chat Input"
+          slotProps={{
+            htmlInput: {
+              "data-cy": "chat-input",
+            },
+          }}
           fullWidth
           size="small"
           value={inputValue}
@@ -45,6 +51,8 @@ export default function ChatInput({
           }}
         />
         <IconButton
+          title="Send message"
+          data-cy="send-message"
           type="submit"
           color="primary"
           sx={{
@@ -56,7 +64,6 @@ export default function ChatInput({
               bgcolor: "primary.dark",
             },
           }}
-          aria-label="Send message"
         >
           <SendIcon fontSize="small" />
         </IconButton>

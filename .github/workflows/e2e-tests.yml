@@ -1,0 +1,44 @@
+name: E2E Tests Pipeline
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run-e2e-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository source code
+        uses: actions/checkout@v6
+
+      - name: Build Docker images for E2E environment
+        run: docker compose -f docker-compose.e2e.yml build
+
+      - name: Execute E2E tests via Docker Compose
+        run: docker compose -f docker-compose.e2e.yml up --abort-on-container-exit --exit-code-from e2e_runner
+
+      # Automatically upload Cypress screenshots if any test fails
+      - name: Upload Cypress failure screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: e2e/cypress/screenshots/
+          retention-days: 7
+
+      # Automatically upload Cypress videos regardless of success or failure
+      - name: Upload Cypress execution videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: e2e/cypress/videos/
+          retention-days: 7
+
+      - name: Tear down Docker environment and clean volumes
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v

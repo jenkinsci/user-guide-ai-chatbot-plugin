@@ -44,3 +44,11 @@ work
 
 # VScode
 .vscode/
+
+# Frontend
+**/node/
+**/node_modules/
+
+# Cypress e2e
+e2e/cypress/screenshots
+e2e/cypress/videos

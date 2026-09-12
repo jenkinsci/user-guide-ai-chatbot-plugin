@@ -92,6 +92,7 @@ export default function ChatListItem({
 
   return (
     <ListItemButton
+      aria-label="Chat History Item"
       key={chat.id}
       dense
       selected={isActive}
@@ -132,6 +133,8 @@ export default function ChatListItem({
       <Box sx={{ flex: 1, overflow: "hidden" }}>
         {isEditing ? (
           <InputBase
+            title="Edit Chat History Item Title Input"
+            inputProps={{ "data-cy": "edit-chat-history-item-title-input" }}
             value={editTitleValue}
             onChange={(e) => setEditTitleValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -204,32 +207,55 @@ export default function ChatListItem({
       >
         {isEditing ? (
           <>
-            <IconButton size="small" onClick={handleSaveEdit} color="success">
+            <IconButton
+              data-cy="confirm-edit-chat-history-item-title"
+              size="small"
+              onClick={handleSaveEdit}
+              color="success"
+            >
               <CheckOutlined fontSize="small" />
             </IconButton>
-            <IconButton size="small" onClick={handleCancelEdit} color="error">
+            <IconButton
+              data-cy="cancel-edit-chat-history-item-title"
+              size="small"
+              onClick={handleCancelEdit}
+              color="error"
+            >
               <CloseOutlined fontSize="small" />
             </IconButton>
           </>
         ) : isDeleting ? (
           <>
             <IconButton
+              data-cy="confirm-delete-chat-history-item"
               size="small"
               onClick={handleConfirmDelete}
               color="error"
             >
               <CheckOutlined fontSize="small" />
             </IconButton>
-            <IconButton size="small" onClick={handleCancelDelete}>
+            <IconButton
+              data-cy="cancel-delete-chat-history-item"
+              size="small"
+              onClick={handleCancelDelete}
+            >
               <CloseOutlined fontSize="small" />
             </IconButton>
           </>
         ) : (
           <>
-            <IconButton size="small" onClick={handleStartEdit}>
+            <IconButton
+              data-cy="edit-chat-history-item-title"
+              size="small"
+              onClick={handleStartEdit}
+            >
               <EditOutlined fontSize="small" sx={{ fontSize: "1.1rem" }} />
             </IconButton>
-            <IconButton size="small" onClick={handleStartDelete}>
+            <IconButton
+              data-cy="delete-chat-history-item"
+              size="small"
+              onClick={handleStartDelete}
+            >
               <DeleteOutlined fontSize="small" sx={{ fontSize: "1.1rem" }} />
             </IconButton>
           </>
