@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Collection" href="collection.html"><link rel="prev" title="Jenkins Context" href="../api/jenkins_controller.html">
         <link rel="prefetch" href="../../_static/jenkins-logo.png" as="image">
 
-    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>Data - AI Chatbot documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
@@ -261,6 +261,15 @@
         <article role="main" id="furo-main-content">
           <section id="data">
 <h1>Data<a class="headerlink" href="#data" title="Link to this heading">¶</a></h1>
+<p>If you only need to use the plugin, you can start the data retrieval pipeline by executing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>data.manager<span class="w"> </span>--sources<span class="w"> </span>jenkins_docs<span class="w"> </span>plugin_docs<span class="w"> </span>reddit_threads<span class="w"> </span>discourse_topics
+</pre></div>
+</div>
+<p>When this process will be finished the data will be stored inside Qdrant vectordb and the
+agent will be able to fetch it using <code class="docutils literal notranslate"><span class="pre">fetch_from_vectordb</span></code> tool.</p>
+<blockquote>
+<div><p><strong>Note</strong>: Make sure you’re in the backend directory before running this script and that Qdrant db container is running.</p>
+</div></blockquote>
 <p>This section documents all phases of the data pipeline.</p>
 <p>The code is stored under:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">backend</span><span class="o">/</span><span class="n">data</span><span class="o">/</span>

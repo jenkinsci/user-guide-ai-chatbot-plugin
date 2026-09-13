@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Preprocessing" href="preprocessing.html"><link rel="prev" title="Data" href="index.html">
         <link rel="prefetch" href="../../_static/jenkins-logo.png" as="image">
 
-    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>Collection - AI Chatbot documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
@@ -262,13 +262,10 @@
           <section id="collection">
 <h1>Collection<a class="headerlink" href="#collection" title="Link to this heading">¶</a></h1>
 <p>For Jenkins documentation, plugin documentation, and Reddit threads, we use a scraping approach, while for Discourse topics, we use the official API.</p>
-<p>If you only need to set up the plugin, we suggest running the data pipeline by executing:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>data.manager<span class="w"> </span>--sources<span class="w"> </span>jenkins_docs<span class="w"> </span>plugin_docs
+<p><strong>To run collection phase:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>data.collection.collectors
 </pre></div>
 </div>
-<blockquote>
-<div><p><strong>Note</strong>: Make sure you’re in the backend directory before running this or any script.</p>
-</div></blockquote>
 <section id="jenkins-documentation">
 <h2>Jenkins Documentation<a class="headerlink" href="#jenkins-documentation" title="Link to this heading">¶</a></h2>
 <p>The scraper iteratively crawls documentation pages using stack-based DFS from https://www.jenkins.io/doc/.

@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Developer Documentation" href="../developer-docs/index.html"><link rel="prev" title="Quick Installation" href="quick-installation.html">
         <link rel="prefetch" href="../_static/jenkins-logo.png" as="image">
 
-    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>Configuration - AI Chatbot documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
@@ -279,6 +279,8 @@
 <p>You can also pick the embedding model and sparse model that you prefer the two default
 are the suggested ones.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">####### HYBRID RETRIEVER #######</span>
+<span class="nv">HF_TOKEN</span><span class="o">=</span><span class="s2">"your-secret-key"</span><span class="w"> </span><span class="c1"># Optional</span>
+
 <span class="c1"># Search for one here: https://huggingface.co/models?library=sentence-transformers</span>
 <span class="nv">HUGGING_FACE_EMBEDDING_NAME</span><span class="o">=</span><span class="s2">"all-MiniLM-L6-v2"</span>
 <span class="nv">EMBEDDING_SIZE</span><span class="o">=</span><span class="s2">"384"</span>
@@ -336,16 +338,18 @@ The Final LLM reads the context and info retrieved and create the final response
 <p>ROUTER_LLM_API_KEY (if the provider doesn’t require it) and ROUTER_LLM_TEMPERATURE are optional.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">########### AGENT ############</span>
 <span class="nv">ROUTER_LLM_PROVIDER</span><span class="o">=</span><span class="s2">"groq"</span>
-<span class="nv">ROUTER_LLM_MODEL_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"llama-3.3-70b-versatile"</span>
+<span class="nv">ROUTER_LLM_MODEL_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"gpt-oss-20b"</span>
 <span class="nv">ROUTER_LLM_BASE_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://api.groq.com/openai/v1/"</span>
 <span class="nv">ROUTER_LLM_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your-secret-key"</span>
 <span class="nv">ROUTER_LLM_TEMPERATURE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"0"</span>
+<span class="nv">ROUTER_LLM_MAX_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"8000"</span>
 
 <span class="nv">FINAL_LLM_PROVIDER</span><span class="o">=</span><span class="s2">"groq"</span>
-<span class="nv">FINAL_LLM_MODEL_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"llama-3.3-70b-versatile"</span>
+<span class="nv">FINAL_LLM_MODEL_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"gpt-oss-20b"</span>
 <span class="nv">FINAL_LLM_BASE_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://api.groq.com/openai/v1/"</span>
 <span class="nv">FINAL_LLM_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your-secret-key"</span>
 <span class="nv">FINAL_LLM_TEMPERATURE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"0.2"</span>
+<span class="nv">FINAL_LLM_MAX_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"8000"</span>
 
 <span class="nv">LANGGRAPH_RECURSION_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"10"</span>
 </pre></div>
@@ -372,6 +376,8 @@ The Final LLM reads the context and info retrieved and create the final response
 <span class="nv">QDRANT_SSL</span><span class="o">=</span><span class="s2">"false"</span>
 <span class="nv">QDRANT_COLLECTION_NAME</span><span class="o">=</span><span class="s2">"production_docs"</span>
 <span class="nv">QDRANT_SECRET_KEY</span><span class="o">=</span><span class="s2">"your-secret-key"</span>
+<span class="nv">QDRANT__SERVICE__JWT_RBAC</span><span class="o">=</span><span class="s2">"true"</span>
+<span class="nv">QDRANT__SERVICE__API_KEY</span><span class="o">=</span><span class="s2">"your-secret-key"</span><span class="w"> </span><span class="c1"># same as QDRANT_SECRET_KEY</span>
 </pre></div>
 </div>
 </section>

@@ -1,5 +1,15 @@
 # Data
 
+If you only need to use the plugin, you can start the data retrieval pipeline by executing: 
+```bash
+python -m data.manager --sources jenkins_docs plugin_docs reddit_threads discourse_topics
+```
+
+When this process will be finished the data will be stored inside Qdrant vectordb and the 
+agent will be able to fetch it using `fetch_from_vectordb` tool.
+
+> **Note**: Make sure you're in the backend directory before running this script and that Qdrant db container is running.
+
 This section documents all phases of the data pipeline.
 
 The code is stored under:
