@@ -136,6 +136,8 @@ export function ChatTools({
         arrow
       >
         <Chip
+          title="Upload Context"
+          data-cy="upload-context"
           onClick={handleUploadClick}
           disabled={isUploading}
           color={

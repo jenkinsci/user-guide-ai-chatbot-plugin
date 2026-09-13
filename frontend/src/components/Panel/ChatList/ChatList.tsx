@@ -221,6 +221,8 @@ export default function ChatList({
     >
       <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
         <Button
+          title="Create Chat History Item"
+          data-cy="create-chat-history-item"
           fullWidth
           size="medium"
           variant="contained"

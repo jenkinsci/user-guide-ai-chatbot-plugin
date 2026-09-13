@@ -54,11 +54,26 @@ def dev():
 
 def prod():
     print("    Starting Docker services...")
+
+    process_env = os.environ.copy()
+
+    process_env["ENV_FILE"] = ".env.prod"
+
+    docker_command = [
+        "docker",
+        "compose",
+        "--profile",
+        "prod",
+        "up",
+        "-d",
+        "--build",
+        "backend",
+    ]
+
     subprocess.run(
-        ["docker", "compose", "--profile", "prod", "up", "-d"],
-        check=True,
-        cwd=SCRIPT_DIR,
+        docker_command, check=True, cwd=SCRIPT_DIR, env=process_env, shell=IS_WINDOWS
     )
+
     print("    Project started.")
 
 

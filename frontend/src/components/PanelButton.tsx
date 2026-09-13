@@ -13,6 +13,7 @@ export default function PanelButton({ toggleChat, isOpen }: PanelButtonProps) {
     <Fab
       onClick={toggleChat}
       title="Open Chatbot"
+      data-cy="open-chatbot"
       color="primary"
       sx={{
         position: "fixed",

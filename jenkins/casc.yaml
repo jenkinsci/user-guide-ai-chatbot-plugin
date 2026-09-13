@@ -1,0 +1,14 @@
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: "secret-key"
+              secret: "${JWT_SECRET_KEY}"
+              description: "JWT Secret for FastAPI"
+
+unclassified:
+  AiChatbotWorkflowConfig:
+    backendUrl: "http://backend_e2e_test:8000/"
+    jwtSecretId: "secret-key"

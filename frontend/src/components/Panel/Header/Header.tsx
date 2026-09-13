@@ -28,7 +28,11 @@ export default function Header({
       }}
     >
       <Box>
-        <RoundedButton onClick={toggleHistory} title="Chat List">
+        <RoundedButton
+          title="Open History Button"
+          onClick={toggleHistory}
+          data-cy="open-history-button"
+        >
           <MenuIcon fontSize="small" />
         </RoundedButton>
       </Box>
