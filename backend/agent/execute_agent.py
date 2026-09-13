@@ -6,7 +6,6 @@ from langgraph.types import StreamMode
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import MessagesState
 from typing import AsyncIterator, Sequence
-from .tools.tools import fetch_context_from_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from manage_env import get_env
@@ -30,6 +29,7 @@ async def execute_agent_prod(
     Streams both "messages" (for frontend tokens) and "updates" (for state debugging).
     """
     from .agent import Agent
+    from .tools.tools import fetch_context_from_db
 
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
@@ -95,6 +95,7 @@ async def execute_agent_debug(
     Streams both "messages" (for frontend tokens) and "updates" (for state debugging).
     """
     from .agent import Agent
+    from .tools.tools import fetch_context_from_db
 
     context = await fetch_context_from_db(chat_id, db_session)
     app = Agent(chat_id, prompt, context, checkpointer).create_state_graph()
