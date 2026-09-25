@@ -13,7 +13,7 @@ dependencies = [
     "babel",
     "beautifulsoup4",
     "cachetools",
-    "deepeval==4.2.2",
+    "deepeval==4.2.6",
     "fastapi",
     "langchain",
     "langchain-anthropic",
