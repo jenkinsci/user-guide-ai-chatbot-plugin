@@ -39,7 +39,7 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "requests",
     "sphinx",
-    "sqlalchemy",
+    "sqlalchemy[asyncio]",
     "urllib3",
     "uvicorn",
     "openai>=2.45.0",
