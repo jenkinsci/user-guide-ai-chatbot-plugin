@@ -23,7 +23,7 @@ jobs:
 
       # Automatically upload Cypress screenshots if any test fails
       - name: Upload Cypress failure screenshots
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
           name: cypress-screenshots
@@ -32,7 +32,7 @@ jobs:
 
       # Automatically upload Cypress videos regardless of success or failure
       - name: Upload Cypress execution videos
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: cypress-videos
