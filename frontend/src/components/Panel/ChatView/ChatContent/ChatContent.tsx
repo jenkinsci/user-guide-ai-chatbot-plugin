@@ -8,7 +8,7 @@ import DateBadge from "./DateBadge";
 
 const formatGroupDate = (dateString: string | Date) => {
   const d = new Date(dateString);
-  return d.toLocaleDateString("it-IT", {
+  return d.toLocaleDateString([], {
     day: "numeric",
     month: "long",
     year: "numeric",
