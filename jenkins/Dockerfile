@@ -1,5 +1,5 @@
 # Stage 1: Build the plugin (including the React frontend)
-FROM maven:3.9-eclipse-temurin-17 AS plugin-builder
+FROM maven:3.10-eclipse-temurin-17 AS plugin-builder
 
 WORKDIR /plugin_build
 
