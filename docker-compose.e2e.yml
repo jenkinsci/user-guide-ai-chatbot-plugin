@@ -1,6 +1,6 @@
 services:
   postgres_db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     container_name: postgres_db_e2e_test
     ports:
