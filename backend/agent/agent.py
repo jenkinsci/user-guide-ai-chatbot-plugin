@@ -1,5 +1,6 @@
 from langchain_core.messages import (
     SystemMessage,
+    HumanMessage,
     ToolMessage,
     AIMessage,
     ToolCall,
@@ -41,6 +42,19 @@ def count_tokens_locally(messages: list) -> int:
     for msg in messages:
         total_tokens += len(local_encoder.encode(str(msg.content)))
     return total_tokens
+
+
+def count_tool_rounds(messages: list) -> int:
+    """
+    Counts how many times the router asked for tools since the user's last question.
+    """
+    rounds = 0
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            break
+        if isinstance(msg, AIMessage) and msg.tool_calls:
+            rounds += 1
+    return rounds
 
 
 class RoutingArgs(BaseModel):
@@ -92,7 +106,7 @@ class Agent:
         self.system_prompt = SystemMessage(content=ROUTER_SYSTEM_PROMPT)
         self.know_ws = False
 
-    async def router_node(self, state: MessagesState) -> dict:
+    async def router_node(self, state: MessagesState, config: RunnableConfig) -> dict:
         """
         The Router reads the conversation, generates a structured decision,
         and we manually convert that decision into a proper LangChain ToolCall.
@@ -115,6 +129,22 @@ class Agent:
                     )
                     return {"messages": [ai_msg]}
 
+        system_prompt = self.system_prompt
+        recursion_limit = config.get("recursion_limit")
+
+        if recursion_limit is not None:
+            tools_left = (recursion_limit - 3) // 2 - count_tool_rounds(messages)
+
+            if tools_left <= 0:
+                ai_msg = AIMessage(
+                    content="[READY]: Tool budget used up, answer with the data gathered so far."
+                )
+                return {"messages": [ai_msg]}
+
+            system_prompt = SystemMessage(
+                content=f"{ROUTER_SYSTEM_PROMPT}\nYou can call {tools_left} more tool(s) before answering (ready_to_answer does not count)."
+            )
+
         trimmed_history = trim_messages(
             messages,
             max_tokens=ROUTER_LLM_MAX_TOKENS - 2000,
@@ -123,7 +153,7 @@ class Agent:
             include_system=False,
             allow_partial=False,
         )
-        router_input = [self.system_prompt] + trimmed_history
+        router_input = [system_prompt] + trimmed_history
 
         response = await self.native_router.ainvoke(router_input)
 
