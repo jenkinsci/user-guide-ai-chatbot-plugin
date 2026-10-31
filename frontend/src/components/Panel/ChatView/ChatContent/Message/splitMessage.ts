@@ -89,14 +89,24 @@ export function splitMessage(text: string): MessagePiece[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (fence) {
-      const inner = stripQuote(line, fence.quote);
-      if (closesFence(inner, fence)) {
+      let inner = line;
+      let quote = 0;
+      while (quote < fence.quote && QUOTE_MARKER.test(inner)) {
+        inner = inner.replace(QUOTE_MARKER, "");
+        quote++;
+      }
+      if (quote < fence.quote) {
         flushCode(fence);
         fence = null;
       } else {
-        fence.lines.push(stripIndent(inner, fence.indent));
+        if (closesFence(inner, fence)) {
+          flushCode(fence);
+          fence = null;
+        } else {
+          fence.lines.push(stripIndent(inner, fence.indent));
+        }
+        continue;
       }
-      continue;
     }
 
     const opened = i < lines.length - 1 ? openFence(line) : null;
