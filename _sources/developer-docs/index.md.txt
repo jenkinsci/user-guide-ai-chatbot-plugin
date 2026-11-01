@@ -5,6 +5,8 @@ This documentation is intended for developers who want to contribute to the proj
 ```{toctree}
 :maxdepth: 1
 
+developing
+testing
 api/index
 data/index
 agent
