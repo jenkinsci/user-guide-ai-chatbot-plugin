@@ -306,7 +306,7 @@ requires-dist = [
     { name = "beautifulsoup4" },
     { name = "black", marker = "extra == 'dev'", specifier = "==26.10.1" },
     { name = "cachetools" },
-    { name = "deepeval", specifier = "==4.2.8" },
+    { name = "deepeval", specifier = "==4.3.2" },
     { name = "fastapi" },
     { name = "fastembed", specifier = ">=0.8.0" },
     { name = "langchain" },
@@ -722,7 +722,7 @@ nvtx = [
 
 [[package]]
 name = "deepeval"
-version = "4.2.8"
+version = "4.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -754,9 +754,9 @@ dependencies = [
     { name = "typer" },
     { name = "wheel" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/99/5920130ea96f90685ef2765010afd85964db12439e50d2304cfa6ba84ba5/deepeval-4.2.8.tar.gz", hash = "sha256:6c6243a53be3e7fd59cf787310d24bbbc479b34cd48bb72f97c6ad81943596e2", size = 1027715, upload-time = "2026-10-02T15:49:09.299Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/26/b6205ba4e91fd96319d0554e11bc758489d118f0b562ee44db4816088a3e/deepeval-4.3.2.tar.gz", hash = "sha256:5f5a733d859110d6c4e0d6879f3585817ffbf5923e1d311a4602410ed9baafcd", size = 1057656, upload-time = "2026-10-27T16:28:40.063Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/e7/0c686816205bc77add2ecacbcad184d8b796c19ca891c2d8c542107340f5/deepeval-4.2.8-py3-none-any.whl", hash = "sha256:1bc6ec6ad9f36427e5578a01b4a2aaa357d7ac51bb0cd726af7315304b0339f8", size = 1486176, upload-time = "2026-10-02T15:49:15.964Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/34/63e1ac5d5a2727a78ed6c231d40f3e8a153b9e82d8cc30e8236f264af41e/deepeval-4.3.2-py3-none-any.whl", hash = "sha256:e0ea88a7a97f453b7b2e62550f5b2881cdc3c8397f93f985a6a161fd86e6d843", size = 1524416, upload-time = "2026-10-27T16:28:43.832Z" },
 ]
 
 [[package]]
