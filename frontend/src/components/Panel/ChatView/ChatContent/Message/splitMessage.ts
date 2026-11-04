@@ -56,6 +56,15 @@ function closesFence(line: string, fence: OpenFence): boolean {
   );
 }
 
+function leavesListItem(line: string, fence: OpenFence): boolean {
+  const indent = line.length - line.trimStart().length;
+  return (
+    line.trim() !== "" &&
+    indent < fence.indent &&
+    !closesFence(line, fence)
+  );
+}
+
 function stripIndent(line: string, width: number): string {
   let cut = 0;
   while (cut < width && (line[cut] === " " || line[cut] === "\t")) {
@@ -95,7 +104,7 @@ export function splitMessage(text: string): MessagePiece[] {
         inner = inner.replace(QUOTE_MARKER, "");
         quote++;
       }
-      if (quote < fence.quote) {
+      if (quote < fence.quote || leavesListItem(inner, fence)) {
         flushCode(fence);
         fence = null;
       } else {
