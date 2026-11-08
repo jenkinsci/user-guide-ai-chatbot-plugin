@@ -7,6 +7,7 @@ export interface MessagePiece {
 interface OpenFence {
   marker: string;
   indent: number;
+  listIndent: number;
   quote: number;
   language: string;
   lines: string[];
@@ -14,6 +15,7 @@ interface OpenFence {
 
 const QUOTE_MARKER = /^[ \t]{0,3}>[ \t]?/;
 const FENCE_LINE = /^([ \t]*(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?)(`{3,}|~{3,})(.*)$/;
+const LIST_ITEM = /^[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+/;
 
 function stripQuote(line: string, depth: number): string {
   for (let n = 0; n < depth; n++) {
@@ -40,6 +42,7 @@ function openFence(line: string): OpenFence | null {
   return {
     marker,
     indent: indent.length,
+    listIndent: 0,
     quote,
     language: info.trim().split(/\s+/)[0],
     lines: [],
@@ -56,11 +59,31 @@ function closesFence(line: string, fence: OpenFence): boolean {
   );
 }
 
+function findListIndent(
+  lines: string[],
+  end: number,
+  fence: OpenFence,
+): number {
+  for (let i = end - 1; i >= 0; i--) {
+    const line = stripQuote(lines[i], fence.quote);
+    const indent = line.length - line.trimStart().length;
+    if (line.trim() === "" || indent >= fence.indent) {
+      continue;
+    }
+    const match = LIST_ITEM.exec(line);
+    if (!match || match[0].length > fence.indent) {
+      return 0;
+    }
+    return match[0].length;
+  }
+  return 0;
+}
+
 function leavesListItem(line: string, fence: OpenFence): boolean {
   const indent = line.length - line.trimStart().length;
   return (
     line.trim() !== "" &&
-    indent < fence.indent &&
+    indent < fence.listIndent &&
     !closesFence(line, fence)
   );
 }
@@ -104,6 +127,10 @@ export function splitMessage(text: string): MessagePiece[] {
         inner = inner.replace(QUOTE_MARKER, "");
         quote++;
       }
+      const codeStarted = fence.lines.some((code) => code.trim() !== "");
+      if (!codeStarted && leavesListItem(inner, fence)) {
+        fence.listIndent = 0;
+      }
       if (quote < fence.quote || leavesListItem(inner, fence)) {
         flushCode(fence);
         fence = null;
@@ -128,6 +155,9 @@ export function splitMessage(text: string): MessagePiece[] {
         textLines.push(listMarker);
       }
       flushText();
+      opened.listIndent = listMarker
+        ? opened.indent
+        : findListIndent(lines, i, opened);
       fence = opened;
     } else {
       textLines.push(line);
