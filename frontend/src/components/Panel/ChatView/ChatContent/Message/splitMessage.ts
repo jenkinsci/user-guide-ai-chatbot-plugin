@@ -61,7 +61,7 @@ function openFence(line: string): OpenFence | null {
   };
 }
 
-function closesFence(line: string, fence: OpenFence): boolean {
+function closeFence(line: string, fence: OpenFence): boolean {
   const trimmed = line.trim();
   const indent = indentOf(line);
   return (
@@ -91,12 +91,12 @@ function findListIndent(
   return 0;
 }
 
-function leavesListItem(line: string, fence: OpenFence): boolean {
+function leaveListItem(line: string, fence: OpenFence): boolean {
   const indent = indentOf(line);
   return (
     line.trim() !== "" &&
     indent < fence.listIndent &&
-    !closesFence(line, fence)
+    !closeFence(line, fence)
   );
 }
 
@@ -143,14 +143,14 @@ export function splitMessage(text: string): MessagePiece[] {
         quote++;
       }
       const codeStarted = fence.lines.some((code) => code.trim() !== "");
-      if (!codeStarted && leavesListItem(inner, fence)) {
+      if (!codeStarted && leaveListItem(inner, fence)) {
         fence.listIndent = 0;
       }
-      if (quote < fence.quote || leavesListItem(inner, fence)) {
+      if (quote < fence.quote || leaveListItem(inner, fence)) {
         flushCode(fence);
         fence = null;
       } else {
-        if (closesFence(inner, fence)) {
+        if (closeFence(inner, fence)) {
           flushCode(fence);
           fence = null;
         } else {
