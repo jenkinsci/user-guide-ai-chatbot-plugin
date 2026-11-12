@@ -13,24 +13,34 @@ interface OpenFence {
   lines: string[];
 }
 
-const QUOTE_MARKER = /^[ \t]{0,3}>[ \t]?/;
+const QUOTE_MARKER = /^([ \t]{0,3}>)([ \t]?)/;
 const FENCE_LINE = /^([ \t]*(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?)(`{3,}|~{3,})(.*)$/;
 const LIST_ITEM = /^[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+/;
 const TAB_SIZE = 4;
 
-function stripQuote(line: string, depth: number): string {
-  for (let n = 0; n < depth; n++) {
-    line = line.replace(QUOTE_MARKER, "");
+function widthOf(text: string, start = 0): number {
+  let column = start;
+  for (const char of text) {
+    column += char === "\t" ? TAB_SIZE - (column % TAB_SIZE) : 1;
   }
-  return line;
+  return column - start;
 }
 
-function widthOf(text: string): number {
-  let width = 0;
-  for (const char of text) {
-    width += char === "\t" ? TAB_SIZE - (width % TAB_SIZE) : 1;
+function stripQuotes(line: string, max: number): [string, number] {
+  let depth = 0;
+  let column = 0;
+  for (; depth < max; depth++) {
+    const match = QUOTE_MARKER.exec(line);
+    if (!match) {
+      break;
+    }
+    const [marker, lead, gap] = match;
+    column += widthOf(lead, column);
+    const kept = gap === "\t" ? widthOf(gap, column) - 1 : 0;
+    column += gap.length;
+    line = " ".repeat(kept) + line.slice(marker.length);
   }
-  return width;
+  return [line, depth];
 }
 
 function indentOf(line: string): number {
@@ -38,12 +48,8 @@ function indentOf(line: string): number {
 }
 
 function openFence(line: string): OpenFence | null {
-  let quote = 0;
-  while (QUOTE_MARKER.test(line)) {
-    line = line.replace(QUOTE_MARKER, "");
-    quote++;
-  }
-  const match = FENCE_LINE.exec(line);
+  const [inner, quote] = stripQuotes(line, Infinity);
+  const match = FENCE_LINE.exec(inner);
   if (!match) {
     return null;
   }
@@ -77,7 +83,7 @@ function findListIndent(
   fence: OpenFence,
 ): number {
   for (let i = end - 1; i >= 0; i--) {
-    const line = stripQuote(lines[i], fence.quote);
+    const [line] = stripQuotes(lines[i], fence.quote);
     const indent = indentOf(line);
     if (line.trim() === "" || indent >= fence.indent) {
       continue;
@@ -92,23 +98,17 @@ function findListIndent(
 }
 
 function leaveListItem(line: string, fence: OpenFence): boolean {
-  const indent = indentOf(line);
-  return (
-    line.trim() !== "" &&
-    indent < fence.listIndent &&
-    !closeFence(line, fence)
-  );
+  return line.trim() !== "" && indentOf(line) < fence.listIndent;
 }
 
 function stripIndent(line: string, width: number): string {
   let cut = 0;
-  while (
-    widthOf(line.slice(0, cut)) < width &&
-    (line[cut] === " " || line[cut] === "\t")
-  ) {
+  let column = 0;
+  while (column < width && (line[cut] === " " || line[cut] === "\t")) {
+    column += widthOf(line[cut], column);
     cut++;
   }
-  return line.slice(cut);
+  return " ".repeat(Math.max(0, column - width)) + line.slice(cut);
 }
 
 export function splitMessage(text: string): MessagePiece[] {
@@ -126,9 +126,14 @@ export function splitMessage(text: string): MessagePiece[] {
   };
 
   const flushCode = (open: OpenFence) => {
+    const first = open.lines.find((code) => code.trim() !== "");
+    const width =
+      first === undefined
+        ? open.indent
+        : Math.min(open.indent, indentOf(first));
     pieces.push({
       kind: "code",
-      content: open.lines.join("\n"),
+      content: open.lines.map((code) => stripIndent(code, width)).join("\n"),
       language: open.language,
     });
   };
@@ -136,34 +141,28 @@ export function splitMessage(text: string): MessagePiece[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (fence) {
-      let inner = line;
-      let quote = 0;
-      while (quote < fence.quote && QUOTE_MARKER.test(inner)) {
-        inner = inner.replace(QUOTE_MARKER, "");
-        quote++;
+      const [inner, quote] = stripQuotes(line, fence.quote);
+      if (closeFence(inner, fence)) {
+        flushCode(fence);
+        fence = null;
+        continue;
       }
       const codeStarted = fence.lines.some((code) => code.trim() !== "");
       if (!codeStarted && leaveListItem(inner, fence)) {
         fence.listIndent = 0;
       }
-      if (quote < fence.quote || leaveListItem(inner, fence)) {
-        flushCode(fence);
-        fence = null;
-      } else {
-        if (closeFence(inner, fence)) {
-          flushCode(fence);
-          fence = null;
-        } else {
-          fence.lines.push(stripIndent(inner, fence.indent));
-        }
+      if (quote === fence.quote && !leaveListItem(inner, fence)) {
+        fence.lines.push(inner);
         continue;
       }
+      flushCode(fence);
+      fence = null;
     }
 
     const opened = i < lines.length - 1 ? openFence(line) : null;
 
     if (opened) {
-      const listMarker = stripQuote(line, opened.quote)
+      const listMarker = stripQuotes(line, opened.quote)[0]
         .split(opened.marker)[0]
         .trim();
       if (listMarker) {
