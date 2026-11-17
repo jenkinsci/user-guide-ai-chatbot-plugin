@@ -168,4 +168,4 @@ def start_manager():
 
 
 if __name__ == "__main__":
-    asyncio.run(start_manager())
+    start_manager()
