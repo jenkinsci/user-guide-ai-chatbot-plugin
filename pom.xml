@@ -155,6 +155,18 @@
               <arguments>run build</arguments>
             </configuration>
           </execution>
+
+          <!-- Step 4: Run the frontend tests -->
+          <execution>
+            <id>npm-run-test</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>test</phase>
+            <configuration>
+              <arguments>run test</arguments>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
