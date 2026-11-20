@@ -5,7 +5,7 @@ const FENCE = "```";
 
 describe("splitMessage", () => {
   describe("basics", () => {
-    test("should return a plain test as a single test piece", () => {
+    test("returns a plain test as a single test piece", () => {
       expect(splitMessage("How can I create a new Plugin?")).toEqual([
         { kind: "text", content: "How can I create a new Plugin?" },
       ]);
@@ -31,14 +31,14 @@ describe("splitMessage", () => {
   });
 
 describe("language tags", () => {
-  test("it keeps a language tag with a plus sign", () => {
+  test("keeps a language tag with a plus sign", () => {
     const msg = `${FENCE}c++\nint a;\n${FENCE}\nAfter`;
     expect(splitMessage(msg)).toEqual([
       { kind: "code", content: "int a;", language: "c++" },
       { kind: "text", content: "After" },
     ]);
   });
-  test("it keeps a language tag with a hyphen", () => {
+  test("keeps a language tag with a hyphen", () => {
     const msg = `${FENCE}shell-session\n$ ls\n${FENCE}`;
     expect(splitMessage(msg)).toEqual([
       { kind: "code", content: "$ ls", language: "shell-session" },
@@ -47,7 +47,7 @@ describe("language tags", () => {
 });
 
 describe("closing fence", () => {
-  test("dosent close on a fence indented inside the code block", () => {
+  test("does not close on a fence indented inside the code block", () => {
     const code = `def s = """\n        ${FENCE}\n"""`;
     const msg = `${FENCE}groovy\n${code}\n${FENCE}\nAfter`;
 
@@ -56,12 +56,12 @@ describe("closing fence", () => {
       { kind: "text", content: "After" },
     ]);
   });
-  test("supports tidle fences", () => {
+  test("supports tilde fences", () => {
     expect(splitMessage("~~~\na\n~~~")).toEqual([
       { kind: "code", content: "a", language: "" },
     ]);
   });
-  test("dosen't close a longer fence with a shorter one", () => {
+  test("does not close a longer fence with a shorter one", () => {
     const longFence = "````";
     const msg = `${longFence}\na\n${FENCE}\nstill code\n${longFence}`;
     expect(splitMessage(msg)).toEqual([
@@ -81,7 +81,7 @@ describe("blockquotes", () => {
 });
 
 describe("indentation and lists", () => {
-  test("Keep unindented lines after an indented code fence outside the list", () => {
+  test("Keeps unindented lines after an indented code fence outside the list", () => {
     const msg = `  ${FENCE}groovy\npipeline {\n}\n  ${FENCE}`;
 
     expect(splitMessage(msg)).toEqual([
@@ -115,7 +115,7 @@ describe("edge cases", () => {
     expect(splitMessage(msg)).toEqual([{ kind: "text", content: msg }]);
   });
 
-  test("handles windows line endings", () => {
+  test("handles Windows line endings", () => {
     const msg = `A\r\n${FENCE}sh\r\nmake\r\n${FENCE}\r\nB`;
 
     expect(splitMessage(msg)).toEqual([
