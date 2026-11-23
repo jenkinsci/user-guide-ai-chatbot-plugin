@@ -1,23 +1,24 @@
 package io.jenkins.plugins.chatbot;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
-import org.junit.jupiter.api.Test;
-
 class GlobalAiDecoratorTest {
 
     @Test
-    void dashboardPath(){
+    void dashboardPath() {
         GlobalAiDecorator instance = new GlobalAiDecorator();
         String screenName = instance.getScreenNameFromPath("/");
         assertEquals("Dashboard", screenName);
     }
-    @ParameterizedTest 
-        @CsvSource({
+
+    @ParameterizedTest
+    @CsvSource({
         "/, Dashboard",
         "/manage/configure, System Configuration",
         "/manage/, Manage Jenkins",
@@ -29,16 +30,18 @@ class GlobalAiDecoratorTest {
         "/computer/agent1/, Manage Nodes and Clouds",
         "/view/all/, Generic Page",
     })
-    void screenNameFromKnownPages(String path, String expected){
+    void screenNameFromKnownPages(String path, String expected) {
         GlobalAiDecorator instance = new GlobalAiDecorator();
         assertEquals(expected, instance.getScreenNameFromPath(path));
     }
+
     @ParameterizedTest
     @NullAndEmptySource
-    void unknownPageForMissingPath(String path){
+    void unknownPageForMissingPath(String path) {
         GlobalAiDecorator instance = new GlobalAiDecorator();
         assertEquals("Unknown Page", instance.getScreenNameFromPath(path));
     }
+
     @Test
     void parsesJobNameAndBuildNumber() {
         GlobalAiDecorator instance = new GlobalAiDecorator();
