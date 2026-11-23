@@ -73,7 +73,17 @@ cd backend
 python run.py prod
 ```
 
-### 8. Restart Jenkins
+### 8. Load the Jenkins docs
+
+The vector db starts empty, so until you load some data the chatbot answers without the Jenkins documentation. With the backend running, execute:
+
+```bash
+docker exec fastapi_backend python -m data.manager --sources jenkins_docs
+```
+
+This takes a while (around 45 minutes on a laptop), let it finish before using the chatbot. To load other sources like plugin docs or Discourse topics, see [Configuration](configuration.md).
+
+### 9. Restart Jenkins
 
 Now restart Jenkins, you should be able to see the button to open chatbot panel at the bottom right of the screen.
 
