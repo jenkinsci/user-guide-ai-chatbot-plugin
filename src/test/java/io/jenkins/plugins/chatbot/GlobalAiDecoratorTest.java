@@ -46,5 +46,7 @@ class GlobalAiDecoratorTest {
     void parsesJobNameAndBuildNumber() {
         GlobalAiDecorator instance = new GlobalAiDecorator();
         assertArrayEquals(new String[] {"app", "10"}, instance.getJobNameAndBuildNumber("/job/app/10/"));
+        assertArrayEquals(new String[] {"app", null}, instance.getJobNameAndBuildNumber("/job/app/lastBuild/"));
+        assertArrayEquals(new String[] {null, null}, instance.getJobNameAndBuildNumber("/manage/"));
     }
 }
