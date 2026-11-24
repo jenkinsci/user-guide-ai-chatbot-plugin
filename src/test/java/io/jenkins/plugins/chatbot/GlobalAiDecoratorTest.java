@@ -10,13 +10,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 class GlobalAiDecoratorTest {
 
-    @Test
-    void dashboardPath() {
-        GlobalAiDecorator instance = new GlobalAiDecorator();
-        String screenName = instance.getScreenNameFromPath("/");
-        assertEquals("Dashboard", screenName);
-    }
-
     @ParameterizedTest
     @CsvSource({
         "/, Dashboard",

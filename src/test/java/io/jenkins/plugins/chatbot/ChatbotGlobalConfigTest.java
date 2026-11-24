@@ -66,6 +66,9 @@ class ChatbotGlobalConfigTest {
         SystemCredentialsProvider.getInstance()
                 .getCredentials()
                 .add(new StringCredentialsImpl(
-                        CredentialsScope.GLOBAL, "jwt-secret", "JWT secret", Secret.fromString("test-secret")));
+                        CredentialsScope.GLOBAL,
+                        "jwt-secret",
+                        "JWT secret",
+                        Secret.fromString("my-secret-key-for-chatbot-tests")));
     }
 }
