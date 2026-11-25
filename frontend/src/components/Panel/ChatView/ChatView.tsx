@@ -9,6 +9,7 @@ import {
   QuestionEntity,
 } from "../../../models/models";
 import ErrorBanner from "../../ErrorBanner";
+import { readStreamLines } from "./readStreamLines";
 
 interface ChatViewProps {
   activeChatId: number | null;
@@ -203,19 +204,10 @@ export default function ChatView({
 
         if (value) {
           buffer += textDecoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+          const { payloads, rest } = readStreamLines(buffer);
+          buffer = rest;
 
-          for (let line of lines) {
-            line = line.trim();
-            if (!line) continue;
-
-            if (line.startsWith("data: ")) {
-              line = line.replace(/^data:\s*/, "");
-            }
-
-            if (line === "[DONE]") continue;
-
+          for (const line of payloads) {
             try {
               const data = JSON.parse(line);
 
