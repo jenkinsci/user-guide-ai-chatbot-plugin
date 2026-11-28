@@ -33,8 +33,9 @@ class ChatbotGlobalConfigTest {
         webClient.getOptions().setThrowExceptionOnScriptError(false);
         HtmlForm form = webClient.goTo("configure").getFormByName("config");
         j.submit(form);
-        assertEquals("http://localhost:8000/", ChatbotGlobalConfig.get().getBackendUrl());
-        assertEquals("jwt-secret", ChatbotGlobalConfig.get().getJwtSecretId());
+        ChatbotGlobalConfig reloaded = new ChatbotGlobalConfig();
+        assertEquals("http://localhost:8000/", reloaded.getBackendUrl());
+        assertEquals("jwt-secret", reloaded.getJwtSecretId());
     }
 
     @Test
