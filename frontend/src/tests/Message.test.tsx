@@ -55,7 +55,7 @@ describe("Message", () => {
       expect(onEditConfirm).not.toHaveBeenCalled();
     });
 
-    test("cancels the edit on Escape btn is clicked", () => {
+    test("cancels the edit when Escape is pressed", () => {
       const onEditConfirm = vi.fn();
       render(
         <Message
