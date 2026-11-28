@@ -2,6 +2,7 @@ package io.jenkins.plugins.chatbot;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -25,13 +26,13 @@ class ChatbotGlobalConfigTest {
     @Test
     void configRoundTrip(JenkinsRule j) throws Exception {
         addJwtSecret();
-        ChatbotGlobalConfig config = ChatbotGlobalConfig.get();
-        config.setBackendUrl("http://localhost:8000/");
-        config.setJwtSecretId("jwt-secret");
+        assertNull(ChatbotGlobalConfig.get().getBackendUrl());
 
         JenkinsRule.WebClient webClient = j.createWebClient();
         webClient.getOptions().setThrowExceptionOnScriptError(false);
         HtmlForm form = webClient.goTo("configure").getFormByName("config");
+        form.getInputByName("_.backendUrl").setValue("http://localhost:8000/");
+        form.getSelectByName("_.jwtSecretId").setSelectedAttribute("jwt-secret", true);
         j.submit(form);
         ChatbotGlobalConfig reloaded = new ChatbotGlobalConfig();
         assertEquals("http://localhost:8000/", reloaded.getBackendUrl());
